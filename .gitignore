@@ -1,0 +1,57 @@
+### Gradle ###
+.gradle
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+../.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### OS Specific ###
+.DS_Store
+Thumbs.db
+
+### Database ###
+/db/
+
+### Spring Boot ###
+application-local.properties
+application-local.yml
+
+### Logs ###
+logs/
+*.log
+
+### Kotlin ###
+*.class
+*.ctxt
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Cache files ###
+.kotlin-cache/
+.kotlin/
+
+### Environment files ###
+.env
+.env.*
+!.env.example
+
+### Temporary files ###
+tmp/
+temp/
+
