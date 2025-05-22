@@ -1,0 +1,34 @@
+package com.noom.interview.fullstack.sleep.domain.model
+
+import java.time.Instant
+import java.util.*
+import javax.persistence.*
+
+@Entity
+@Table(name = "tab_sleep_log")
+data class SleepLog(
+
+    @Id @Column(name = "id_sleep", nullable = false)
+    val idSleep: String = UUID.randomUUID().toString(),
+
+    @Column(name = "id_user", nullable = false)
+    val userId: Long,
+
+    @Column(name = "dat_sleep_date", nullable = false)
+    val dateSleep: Instant,
+
+    @Column(name = "dat_bed_time_start", nullable = false)
+    val dateBedtimeStart: Instant,
+
+    @Column(name = "dat_bed_time_end", nullable = false)
+    val dateBedtimeEnd: Instant,
+
+    @Column(name = "val_total_time_bed_minutes")
+    val totalTimeInBedMinutes: Double = 0.0,
+
+    @Column(name = "ind_feeling_morning", nullable = false)
+    val feelingMorning: String = "",
+
+    @Column(name = "dat_load")
+    val dateCreate: Instant = Instant.now()
+)
