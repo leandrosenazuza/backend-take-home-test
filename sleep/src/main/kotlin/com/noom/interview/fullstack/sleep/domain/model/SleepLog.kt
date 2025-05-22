@@ -12,7 +12,7 @@ data class SleepLog(
     val idSleep: String = UUID.randomUUID().toString(),
 
     @Column(name = "id_user", nullable = false)
-    val userId: Long,
+    val userId: String = "",
 
     @Column(name = "dat_sleep_date", nullable = false)
     val dateSleep: Instant,
@@ -29,6 +29,6 @@ data class SleepLog(
     @Column(name = "ind_feeling_morning", nullable = false)
     val feelingMorning: String = "",
 
-    @Column(name = "dat_load")
+    @Column(name = "dat_create")
     val dateCreate: Instant = Instant.now()
 )
