@@ -1,4 +1,4 @@
--- First version of the tables. The id of both tables will be use the UUID as id.
+-- First version of the tables. The id of both tables will use UUID.
 
 CREATE TABLE tab_user (
                           id_user VARCHAR(36) PRIMARY KEY,
