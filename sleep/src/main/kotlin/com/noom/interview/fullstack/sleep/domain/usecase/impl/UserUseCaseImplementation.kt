@@ -30,7 +30,7 @@ class UserUseCaseImplementation(
         var user: User = userMapper.toUserFromRequest(userRequest)
         user = userRepository.save(user)
         val data: UserResponse = userMapper.toResponseFromUser(user)
-        return ApiResponse.Builder<UserResponse, Meta>().data(data).message("User created with success!").meta(Meta(1, 1, Instant.now().toString())).build()
+        return ApiResponse.Builder<UserResponse, Meta>().status("success").data(data).message("User created with success!").meta(Meta(1, 1, Instant.now().toString())).build()
     }
 
     override fun updateUser(userRequest: UserRequest, userId: String): ApiResponse<UserResponse?, Meta> {

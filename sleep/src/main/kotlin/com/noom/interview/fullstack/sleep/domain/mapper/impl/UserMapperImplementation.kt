@@ -30,6 +30,7 @@ class UserMapperImplementation: UserMapper {
         return UserResponse(
             userId = user.idUser,
             userName = user.username
+
         )
     }
 }
