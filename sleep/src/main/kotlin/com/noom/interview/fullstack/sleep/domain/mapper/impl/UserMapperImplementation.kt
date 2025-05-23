@@ -9,7 +9,7 @@ import java.time.Instant
 import java.util.*
 
 @Component
-class UserMapperImplementation: UserMapper {
+class UserMapperImplementation : UserMapper {
     override fun toUserFromRequest(userRequest: UserRequest): User {
         return User(
             idUser = UUID.randomUUID().toString(),
@@ -30,7 +30,6 @@ class UserMapperImplementation: UserMapper {
         return UserResponse(
             userId = user.idUser,
             userName = user.username
-
         )
     }
 }
