@@ -7,8 +7,8 @@ import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
 import org.springframework.http.ResponseEntity
 
 interface UserController {
-    fun getUserById(userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
+    fun getUserById(idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
     fun createUser(userRequest: UserRequest): ResponseEntity<ApiResponse<UserResponse?, Meta>>
-    fun updateUser(userRequest: UserRequest, userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
-    fun deleteUserById(userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
+    fun updateUser(userRequest: UserRequest, idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
+    fun deleteUserById(idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
 }

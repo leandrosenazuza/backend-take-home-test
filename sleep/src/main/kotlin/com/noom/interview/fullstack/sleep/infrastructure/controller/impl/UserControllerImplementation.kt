@@ -21,10 +21,10 @@ class UserControllerImplementation(@Autowired val userUserCase: UserUseCase) : U
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     @GetMapping(URI_GET_USER_V1)
-    override fun getUserById(@PathVariable("userId") userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
+    override fun getUserById(@PathVariable("idUser") idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>>
      {
-        logger.info("Request to get user by id: + $userId")
-        val response = userUserCase.getUser(userId)
+        logger.info("Request to get user by id: + $idUser")
+        val response = userUserCase.getUser(idUser)
         return ResponseEntity.ok(response)
     }
 
@@ -36,16 +36,16 @@ class UserControllerImplementation(@Autowired val userUserCase: UserUseCase) : U
     }
 
     @PutMapping(URI_PUT_USER_V1)
-    override fun updateUser(@RequestBody userRequest: UserRequest, @PathVariable userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>> {
+    override fun updateUser(@RequestBody userRequest: UserRequest, @PathVariable idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>> {
         logger.info("Request to PUT user by body: + $userRequest")
-        val response = userUserCase.updateUser(userRequest, userId)
+        val response = userUserCase.updateUser(userRequest, idUser)
         return ResponseEntity.ok(response)
     }
 
     @DeleteMapping(URI_DELETE_USER_V1)
-    override fun deleteUserById(@PathVariable userId: String): ResponseEntity<ApiResponse<UserResponse?, Meta>> {
-        logger.info("Request to DELETE user by id: + $userId")
-        val user = userUserCase.deleteUser(userId)
+    override fun deleteUserById(@PathVariable idUser: String): ResponseEntity<ApiResponse<UserResponse?, Meta>> {
+        logger.info("Request to DELETE user by id: + $idUser")
+        val user = userUserCase.deleteUser(idUser)
         return ResponseEntity.ok(user)
     }
 }

@@ -28,7 +28,7 @@ class UserMapperImplementation : UserMapper {
 
     override fun toResponseFromUser(user: User): UserResponse {
         return UserResponse(
-            userId = user.idUser,
+            idUser = user.idUser,
             userName = user.username
         )
     }
