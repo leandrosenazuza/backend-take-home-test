@@ -6,6 +6,7 @@ import com.noom.interview.fullstack.sleep.domain.mapper.UserMapper
 import com.noom.interview.fullstack.sleep.domain.model.User
 import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
 import com.noom.interview.fullstack.sleep.domain.usecase.UserUseCase
+import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import com.noom.interview.fullstack.sleep.infrastructure.exception.NotFoundException
 import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
@@ -31,7 +32,7 @@ class UserUseCaseImplementation(
     }
     
     override fun createUser(userRequest: UserRequest): ApiResponse<UserResponse?, Meta> {
-        validateName(userRequest)
+        validateName(userRequest.userName)
         var user: User = userMapper.toUserFromRequest(userRequest)
         user = userRepository.save(user)
         val data: UserResponse = userMapper.toResponseFromUser(user)
@@ -66,7 +67,9 @@ class UserUseCaseImplementation(
     override fun getUserById(idUser: String): User? =
         userRepository.findByIdUser(idUser)
 
-    private fun validateName(userRequest: UserRequest) {
-        validateName(userRequest)
+    private fun validateName(userName: String) {
+        if(userName.isBlank() || !userName.matches(Regex("^[A-Za-z ]+\$"))) {
+            throw BadRequestException()
+        }
     }
 }

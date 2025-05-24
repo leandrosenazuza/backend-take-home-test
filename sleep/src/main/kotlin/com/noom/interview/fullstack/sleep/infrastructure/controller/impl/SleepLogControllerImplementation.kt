@@ -1,6 +1,6 @@
 package com.noom.interview.fullstack.sleep.infrastructure.controller.impl
 
-import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_SLEEP_LOG_V1
+import com.noom.interview.fullstack.sleep.domain.constants.*
 import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.usecase.SleepLogUseCase
@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class SleepLogControllerImplementation(
@@ -24,32 +22,44 @@ class SleepLogControllerImplementation(
 
     @PostMapping(URI_POST_SLEEP_LOG_V1)
     override fun createSleepLog(@RequestBody sleepLogRequest: SleepLogRequest): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        logger.info("Request to POST SleepLog by body: + : + $sleepLogRequest")
+        logger.info("Request to POST SleepLog by body: $sleepLogRequest")
         val sleepLog = sleepLogUseCase.createSleepLog(sleepLogRequest)
         return ResponseEntity.ok(sleepLog)
     }
 
-    override fun updateSleepLog(sleepLogRequest: SleepLogRequest): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+    @PutMapping(URI_PUT_SLEEP_LOG_V1)
+    override fun updateSleepLog(
+        sleepLogRequest: SleepLogRequest,
+        @PathVariable idSleep: String
+    ): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+        logger.info("Request to PUT SleepLog by ID: $idSleep")
+        val sleepLog = sleepLogUseCase.updateSleepLog(sleepLogRequest, idSleep)
+        return ResponseEntity.ok(sleepLog)
+    }
+
+    @DeleteMapping(URI_DELETE_SLEEP_LOG_V1)
+    override fun deleteSleepLog(@PathVariable idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+        logger.info("Request to DELETE SleepLog by body: $idSleep")
+        val sleepLog = sleepLogUseCase.deleteSleepLog(idSleep)
+        return ResponseEntity.ok(sleepLog)
+    }
+
+    @GetMapping(URI_GET_SLEEP_BY_ID_SLEEP_LOG_V1)
+    override fun getSleepLogByIdSleep(@PathVariable idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
         TODO("Not yet implemented")
     }
 
-    override fun deleteSleepLog(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+    @GetMapping(URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1)
+    override fun getLastNightSleepLogInformation(@PathVariable idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
         TODO("Not yet implemented")
     }
 
-    override fun getSleepLogByIdSleep(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+    @GetMapping(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1)
+    override fun getThirtyDaysLastAverageSleepLog(@PathVariable idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
         TODO("Not yet implemented")
     }
 
-    override fun getLastNightSleepLogInformation(idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getThirtyDaysLastAverageSleepLog(idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getSleepLogList(idUser: String): ResponseEntity<ApiResponse<Page<SleepLogResponse>, Meta>> {
+    override fun getSleepLogList(@PathVariable idUser: String): ResponseEntity<ApiResponse<Page<SleepLogResponse>, Meta>> {
         TODO("Not yet implemented")
     }
 

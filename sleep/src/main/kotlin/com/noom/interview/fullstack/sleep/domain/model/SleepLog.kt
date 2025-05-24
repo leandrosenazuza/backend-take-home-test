@@ -1,6 +1,8 @@
 package com.noom.interview.fullstack.sleep.domain.model
 
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 import javax.persistence.*
 
@@ -30,5 +32,5 @@ data class SleepLog(
     val feelingMorning: String = "",
 
     @Column(name = "dat_create")
-    val dateCreate: Instant = Instant.now()
+    val dateCreate: Instant = ZonedDateTime.now(ZoneId.systemDefault()).toInstant()
 )

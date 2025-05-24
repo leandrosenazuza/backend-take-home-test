@@ -5,6 +5,7 @@ import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
+import com.noom.interview.fullstack.sleep.domain.model.specification.SleepLogSpecification
 import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
 import com.noom.interview.fullstack.sleep.domain.usecase.SleepLogUseCase
 import com.noom.interview.fullstack.sleep.domain.usecase.UserUseCase
@@ -15,8 +16,10 @@ import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
 import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.time.ZoneId
 
 @Service
 class SleepLogUseCaseImplementation(
@@ -24,9 +27,6 @@ class SleepLogUseCaseImplementation(
     @Autowired val sleepLogMapper: SleepLogMapper,
     @Autowired val userUseCase: UserUseCase
 ) : SleepLogUseCase {
-    override fun getSleepLog(idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
-        TODO("Not yet implemented")
-    }
 
     override fun createSleepLog(sleepLogRequest: SleepLogRequest): ApiResponse<SleepLogResponse?, Meta> {
         validateRequest(sleepLogRequest)
@@ -41,24 +41,37 @@ class SleepLogUseCaseImplementation(
     
     override fun updateSleepLog(sleepLogRequest: SleepLogRequest, idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
         validateDates(sleepLogRequest)
-        val sleepLog = sleepLogRepository.findByIdSleepLog(idSleep)
+        val sleepLog = this.getSleepLog(idSleep)
         if (sleepLog != null) {
             val sleepLogUpdated: SleepLog = sleepLogMapper.toSleepLogFromRequest(sleepLogRequest)
             sleepLogUpdated.totalTimeInBedMinutes =  getDifferenceOfTime(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
             sleepLogRepository.save(sleepLogUpdated)
             val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
             return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
-                .message("User updated with success!")
+                .message("Sleep updated with success!")
                 .meta(Meta(1, 1, Instant.now().toString())).build()
         } else throw NotFoundException()
     }
 
     override fun deleteSleepLog(idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
-        TODO("Not yet implemented")
+        val sleepLog = this.getSleepLog(idSleep)
+        if (sleepLog != null) {
+            sleepLogRepository.delete(sleepLog)
+            val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
+            return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
+                .message("SleepLog deleted with success!")
+                .meta(Meta(1, 1, Instant.now().toString())).build()
+        } else throw NotFoundException()
     }
 
-    override fun getSleepLogByIdSleep(idSleep: String): ApiResponse<SleepLogResponse, Meta> {
-        TODO("Not yet implemented")
+    override fun getSleepLogByIdSleep(idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
+        val sleepLog = this.getSleepLog(idSleep)
+        if (sleepLog != null) {
+            val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
+            return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
+                .message("SleepLog returned with success!")
+                .meta(Meta(1, 1, Instant.now().toString())).build()
+        } else throw NotFoundException()
     }
 
     override fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse, Meta> {
@@ -69,13 +82,16 @@ class SleepLogUseCaseImplementation(
         TODO("Not yet implemented")
     }
 
-    override fun getSleepLogList(idUser: String): ApiResponse<Page<SleepLogResponse>, Meta> {
+    override fun getSleepLogListByIdUser(idUser: String): ApiResponse<Page<SleepLogResponse>, Meta> {
         TODO("Not yet implemented")
     }
+
+    private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)
 
     private fun validateRequest(sleepLogRequest: SleepLogRequest) {
         validateDates(sleepLogRequest)
         validateUser(sleepLogRequest.idUser)
+        validateSleepLogAlreadyExist(sleepLogRequest.idUser)
         validateFeelingEnum(sleepLogRequest.feelingMorning)
     }
 
@@ -91,6 +107,11 @@ class SleepLogUseCaseImplementation(
         }
     }
 
+    private fun validateSleepLogAlreadyExist(idUser: String) {
+        if(sleepLogRepository.findAll(SleepLogSpecification(idUser)).size != 0){
+            throw BadRequestException()
+        }
+    }
 
     private fun validateUser(idUser: String) {
         if(userUseCase.getUserById(idUser) == null) {
@@ -99,16 +120,25 @@ class SleepLogUseCaseImplementation(
     }
 
     private fun validateDates(sleepLogRequest: SleepLogRequest) {
-        if (!sleepLogRequest.dateSleep.matches(Regex(DATE_BASIC_YYYY_MM_DD))) {
+        val instantNow = Instant.now().atZone(ZoneId.systemDefault())
+        val dateSleep = instantNow.toString()
+        val dateSleepMinusOne = instantNow.minusDays(1).toString()
+        val startDateHourofSleep = sleepLogRequest.dateBedtimeStart
+        val endDateHourofSleep = sleepLogRequest.dateBedtimeEnd
+
+        if(!(dateSleep.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(10, startDateHourofSleep.length)
+            || dateSleepMinusOne.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(10, startDateHourofSleep.length))){
             throw BadRequestException()
         }
 
-        if (!sleepLogRequest.dateBedtimeStart.matches(Regex(DATE_ISO_8601_PATTERN))) {
+        if (!startDateHourofSleep.matches(Regex(DATE_ISO_8601_PATTERN))) {
             throw BadRequestException()
         }
 
-        if (!sleepLogRequest.dateBedtimeEnd.matches(Regex(DATE_ISO_8601_PATTERN))) {
+        if (!endDateHourofSleep.matches(Regex(DATE_ISO_8601_PATTERN))) {
             throw BadRequestException()
         }
+
+        if (getDifferenceOfTime(Instant.parse(startDateHourofSleep), Instant.parse(endDateHourofSleep)) < 0) throw BadRequestException()
     }
 }

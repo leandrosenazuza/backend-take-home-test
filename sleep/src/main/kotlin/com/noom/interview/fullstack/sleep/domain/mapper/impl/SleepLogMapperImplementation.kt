@@ -7,6 +7,8 @@ import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.stereotype.Component
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 
 @Component
@@ -14,21 +16,21 @@ class SleepLogMapperImplementation() : SleepLogMapper {
     override fun toSleepLogFromRequest(sleepLogRequest: SleepLogRequest) = SleepLog(
         idUser = sleepLogRequest.idUser,
         idSleep = UUID.randomUUID().toString(),
-        dateSleep = parseStringToInstant(sleepLogRequest.dateSleep),
+        dateSleep = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
-        feelingMorning = sleepLogRequest.feelingMorning,
-        dateCreate = Instant.now()
+        feelingMorning = sleepLogRequest.feelingMorning.toString(),
+        dateCreate = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
     )
 
     override fun toUpdateSleepLogFromRequest(sleepLogRequest: SleepLogRequest, sleepLog: SleepLog) = SleepLog(
         idUser = sleepLogRequest.idUser,
         idSleep = sleepLog.idSleep,
-        dateSleep = parseStringToInstant(sleepLogRequest.dateSleep),
+        dateSleep = sleepLog.dateSleep,
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
-        feelingMorning = sleepLogRequest.feelingMorning,
-        dateCreate = Instant.now()
+        feelingMorning = sleepLogRequest.feelingMorning.toString(),
+        dateCreate = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
     )
 
     override fun toResponseFromSleepLog(sleepLog: SleepLog) = SleepLogResponse(

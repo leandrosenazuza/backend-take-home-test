@@ -6,10 +6,11 @@ import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
 
 interface SleepLogController {
     fun createSleepLog(sleepLogRequest: SleepLogRequest): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
-    fun updateSleepLog(sleepLogRequest: SleepLogRequest): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
+    fun updateSleepLog(sleepLogRequest: SleepLogRequest, idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
     fun deleteSleepLog(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
     fun getSleepLogByIdSleep(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
     fun getLastNightSleepLogInformation(idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
