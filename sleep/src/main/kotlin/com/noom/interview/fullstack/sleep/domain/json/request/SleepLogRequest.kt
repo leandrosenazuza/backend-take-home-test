@@ -1,6 +1,7 @@
 package com.noom.interview.fullstack.sleep.domain.json.request
 
 import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
+import com.noom.interview.fullstack.sleep.infrastructure.util.DATE_BASIC_YYYY_MM_DD
 import com.noom.interview.fullstack.sleep.infrastructure.util.DATE_ISO_8601_PATTERN
 import com.noom.interview.fullstack.sleep.infrastructure.util.UUID_PATTERN
 import javax.validation.constraints.Pattern
@@ -8,6 +9,9 @@ import javax.validation.constraints.Pattern
 data class SleepLogRequest (
     @field:Pattern(regexp = UUID_PATTERN)
     val idUser: String = "",
+
+    @field:Pattern(regexp = DATE_BASIC_YYYY_MM_DD)
+    val dateSleep: String = "",
 
     @field:Pattern(regexp = DATE_ISO_8601_PATTERN)
     val dateBedtimeStart: String = "",

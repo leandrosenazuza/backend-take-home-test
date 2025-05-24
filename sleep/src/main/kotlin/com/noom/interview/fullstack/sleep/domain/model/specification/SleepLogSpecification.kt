@@ -1,6 +1,7 @@
 package com.noom.interview.fullstack.sleep.domain.model.specification
 
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import com.noom.interview.fullstack.sleep.infrastructure.util.getDateThirtyDaysLastByServerMachine
 import org.springframework.data.jpa.domain.Specification
 import java.time.Instant
@@ -23,7 +24,7 @@ class SleepLogSpecification(val idUser: String, private val isThirtyDaysLast: Bo
 
         if(isThirtyDaysLast) {
             predicates.add(criteriaBuilder.greaterThanOrEqualTo(dateSleepPath, getDateThirtyDaysLastByServerMachine()))
-            predicates.add(criteriaBuilder.lessThan(dateSleepPath, getDateThirtyDaysLastByServerMachine().plus(1, ChronoUnit.DAYS)))
+            predicates.add(criteriaBuilder.lessThan(dateSleepPath, getDateNowByServerMachine().plus(1, ChronoUnit.DAYS)))
         }
 
         return criteriaBuilder.and(*predicates.toTypedArray())

@@ -20,6 +20,11 @@ class SleepLogControllerImplementation(
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    /*
+    * The purpose of this endpoint is to register sleep intervals when the user forgot to add some day.
+    * In this case, the user must insert as dateSleep the respective "today" date for the interval inserted.
+    * It's not allowed to insert one date that already exist.
+    * */
     @PostMapping(URI_POST_SLEEP_LOG_V1)
     override fun createSleepLog(@RequestBody sleepLogRequest: SleepLogRequest): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
         logger.info("Request to POST SleepLog by body: $sleepLogRequest")

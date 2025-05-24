@@ -19,7 +19,7 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         dateSleep = getDateNowByServerMachine(),
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
-        feelingMorning = sleepLogRequest.feelingMorning.toString(),
+        feelingMorning = sleepLogRequest.feelingMorning,
         dateCreate = getDateNowByServerMachine(),
     )
 
@@ -29,7 +29,7 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         dateSleep = sleepLog.dateSleep,
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
-        feelingMorning = sleepLogRequest.feelingMorning.toString(),
+        feelingMorning = sleepLogRequest.feelingMorning,
         dateCreate = getDateNowByServerMachine(),
     )
 
