@@ -9,7 +9,6 @@ import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -29,7 +28,7 @@ class SleepLogControllerImplementation(
 
     @PutMapping(URI_PUT_SLEEP_LOG_V1)
     override fun updateSleepLog(
-        sleepLogRequest: SleepLogRequest,
+        @RequestBody sleepLogRequest: SleepLogRequest,
         @PathVariable idSleep: String
     ): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
         logger.info("Request to PUT SleepLog by ID: $idSleep")
@@ -46,21 +45,25 @@ class SleepLogControllerImplementation(
 
     @GetMapping(URI_GET_SLEEP_BY_ID_SLEEP_LOG_V1)
     override fun getSleepLogByIdSleep(@PathVariable idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        TODO("Not yet implemented")
+        logger.info("Request to GET SleepLog by idSleep: $idSleep")
+        val sleepLog = sleepLogUseCase.getSleepLogByIdSleep(idSleep)
+        return ResponseEntity.ok(sleepLog)
     }
 
     @GetMapping(URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1)
     override fun getLastNightSleepLogInformation(@PathVariable idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        TODO("Not yet implemented")
+        logger.info("Request to GET last night SleepLog by idUser: $idUser")
+        val sleepLog = sleepLogUseCase.getLastNightSleepLogInformation(idUser)
+        return ResponseEntity.ok(sleepLog)
     }
 
     @GetMapping(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1)
-    override fun getThirtyDaysLastAverageSleepLog(@PathVariable idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
-        TODO("Not yet implemented")
+    override fun getThirtyDaysLastAverageSleepLog(@PathVariable idUser: String,
+                                                  @RequestParam(defaultValue = PAGE_STANDARD.toString()) page: Int,
+                                                  @RequestParam(defaultValue = PAGE_SIZE_STANDARD.toString()) pageSize: Int):
+            ResponseEntity<ApiResponse<SleepLogResponse?, Meta>> {
+        logger.info("Request to GET last thirty days SleepLog by idUser: $idUser")
+        val sleepLog = sleepLogUseCase.getThirtyDaysLastAverageSleepLog(idUser, page, pageSize)
+        return ResponseEntity.ok(sleepLog)
     }
-
-    override fun getSleepLogList(@PathVariable idUser: String): ResponseEntity<ApiResponse<Page<SleepLogResponse>, Meta>> {
-        TODO("Not yet implemented")
-    }
-
 }

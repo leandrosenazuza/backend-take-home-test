@@ -41,6 +41,5 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         dateBedtimeEnd = sleepLog.dateBedtimeEnd.toString(),
         totalTimeInBedMinutes = sleepLog.totalTimeInBedMinutes,
         feelingMorning = sleepLog.feelingMorning,
-
     )
 }

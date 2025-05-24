@@ -11,7 +11,6 @@ interface SleepLogUseCase {
     fun updateSleepLog(sleepLogRequest: SleepLogRequest, idSleep: String): ApiResponse<SleepLogResponse?, Meta>
     fun deleteSleepLog(idSleep: String): ApiResponse<SleepLogResponse?, Meta>
     fun getSleepLogByIdSleep(idSleep: String): ApiResponse<SleepLogResponse?, Meta>
-    fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse, Meta>
-    fun getThirtyDaysLastAverageSleepLog(idUser: String): ApiResponse<SleepLogResponse, Meta>
-    fun getSleepLogListByIdUser(idUser: String): ApiResponse<Page<SleepLogResponse>, Meta>
+    fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse?, Meta>
+    fun getThirtyDaysLastAverageSleepLog(idUser: String, page: Int, pageSize: Int): ApiResponse<SleepLogResponse?, Meta>
 }

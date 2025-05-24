@@ -44,4 +44,8 @@ const val URI_POST_SLEEP_LOG_V1 = URI_SLEEP_LOG_V1
 // SleepLog: (DELETE /api/v1/user/{idUser})
 const val URI_DELETE_SLEEP_LOG_V1 = "$URI_SLEEP_LOG_V1/{idSleep}"
 
+const val PAGE_STANDARD = 1
+
+const val PAGE_SIZE_STANDARD = 10
+
 

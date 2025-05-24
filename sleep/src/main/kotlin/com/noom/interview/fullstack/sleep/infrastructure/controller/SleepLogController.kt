@@ -14,6 +14,5 @@ interface SleepLogController {
     fun deleteSleepLog(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
     fun getSleepLogByIdSleep(idSleep: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
     fun getLastNightSleepLogInformation(idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
-    fun getThirtyDaysLastAverageSleepLog(idUser: String): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
-    fun getSleepLogList(idUser: String): ResponseEntity<ApiResponse<Page<SleepLogResponse>, Meta>>
+    fun getThirtyDaysLastAverageSleepLog(idUser: String, page: Int, pageSize: Int): ResponseEntity<ApiResponse<SleepLogResponse?, Meta>>
 }

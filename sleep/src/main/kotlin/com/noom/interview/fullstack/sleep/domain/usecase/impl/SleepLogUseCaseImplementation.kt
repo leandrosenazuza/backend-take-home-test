@@ -16,11 +16,10 @@ import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
 import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
-import org.springframework.data.jpa.domain.Specification
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.ZoneId
-
 @Service
 class SleepLogUseCaseImplementation(
     @Autowired val sleepLogRepository: SleepLogRepository,
@@ -38,7 +37,7 @@ class SleepLogUseCaseImplementation(
             .message("SleepLog created with success!")
             .meta(Meta(1, 1, Instant.now().toString())).build()
     }
-    
+
     override fun updateSleepLog(sleepLogRequest: SleepLogRequest, idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
         validateDates(sleepLogRequest)
         val sleepLog = this.getSleepLog(idSleep)
@@ -67,26 +66,46 @@ class SleepLogUseCaseImplementation(
     override fun getSleepLogByIdSleep(idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
         val sleepLog = this.getSleepLog(idSleep)
         if (sleepLog != null) {
-            val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
-            return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
+            return ApiResponse.Builder<SleepLogResponse, Meta>()
+                .status("success")
+                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog))
                 .message("SleepLog returned with success!")
                 .meta(Meta(1, 1, Instant.now().toString())).build()
         } else throw NotFoundException()
     }
 
-    override fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse, Meta> {
-        TODO("Not yet implemented")
+    override fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse?, Meta> {
+        val sleepLog = getSleepLogByIdUser(idUser)
+        if (sleepLog != null) {
+            return ApiResponse.Builder<SleepLogResponse, Meta>()
+                .status("success")
+                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog))
+                .message("SleepLog returned with success!")
+                .meta(Meta(1, 1, Instant.now().toString())).build()
+        } else throw NotFoundException()
     }
 
-    override fun getThirtyDaysLastAverageSleepLog(idUser: String): ApiResponse<SleepLogResponse, Meta> {
-        TODO("Not yet implemented")
-    }
+    override fun getThirtyDaysLastAverageSleepLog(idUser: String, page: Int, pageSize: Int): ApiResponse<SleepLogResponse?, Meta> {
+        val sleepLogPage = getLastThirtyDaysSleepLogByIdUser(idUser, page, pageSize)
+        val sleepList = sleepLogPage.content.map { sleepLog -> sleepLogMapper.toResponseFromSleepLog(sleepLog) }
 
-    override fun getSleepLogListByIdUser(idUser: String): ApiResponse<Page<SleepLogResponse>, Meta> {
-        TODO("Not yet implemented")
+        if (sleepList.isNotEmpty()) {
+            return ApiResponse.Builder<SleepLogResponse, Meta>()
+                .status("success")
+                .dataList(sleepList)
+                .message("SleepLog returned with success!")
+                .meta(Meta(sleepLogPage.size, sleepLogPage.totalPages, Instant.now().toString())).build()
+        } else throw NotFoundException()
     }
 
     private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)
+
+    private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser)).get(0)
+
+    private fun getLastThirtyDaysSleepLogByIdUser(idUser: String, page: Int, pageSize: Int): Page<SleepLog> {
+        val pageable = PageRequest.of(page - 1, pageSize)
+        return sleepLogRepository.findAll(SleepLogSpecification(idUser, true), pageable)
+    }
 
     private fun validateRequest(sleepLogRequest: SleepLogRequest) {
         validateDates(sleepLogRequest)
@@ -142,3 +161,4 @@ class SleepLogUseCaseImplementation(
         if (getDifferenceOfTime(Instant.parse(startDateHourofSleep), Instant.parse(endDateHourofSleep)) < 0) throw BadRequestException()
     }
 }
+
