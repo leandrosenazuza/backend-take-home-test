@@ -2,6 +2,7 @@ package com.noom.interview.fullstack.sleep.domain.usecase.impl
 
 import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
 import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
+import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogAvgLastThirtyDaysResponse
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
@@ -13,13 +14,20 @@ import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestExc
 import com.noom.interview.fullstack.sleep.infrastructure.exception.NotFoundException
 import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
-import com.noom.interview.fullstack.sleep.infrastructure.util.*
+import com.noom.interview.fullstack.sleep.infrastructure.util.DATE_ISO_8601_PATTERN
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateThirtyDaysLastByServerMachine
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import kotlin.streams.toList
+
 @Service
 class SleepLogUseCaseImplementation(
     @Autowired val sleepLogRepository: SleepLogRepository,
@@ -38,12 +46,16 @@ class SleepLogUseCaseImplementation(
             .meta(Meta(1, 1, Instant.now().toString())).build()
     }
 
-    override fun updateSleepLog(sleepLogRequest: SleepLogRequest, idSleep: String): ApiResponse<SleepLogResponse?, Meta> {
+    override fun updateSleepLog(
+        sleepLogRequest: SleepLogRequest,
+        idSleep: String
+    ): ApiResponse<SleepLogResponse?, Meta> {
         validateDates(sleepLogRequest)
         val sleepLog = this.getSleepLog(idSleep)
         if (sleepLog != null) {
             val sleepLogUpdated: SleepLog = sleepLogMapper.toSleepLogFromRequest(sleepLogRequest)
-            sleepLogUpdated.totalTimeInBedMinutes =  getDifferenceOfTime(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
+            sleepLogUpdated.totalTimeInBedMinutes =
+                getDifferenceOfTime(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
             sleepLogRepository.save(sleepLogUpdated)
             val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
             return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
@@ -85,16 +97,80 @@ class SleepLogUseCaseImplementation(
         } else throw NotFoundException()
     }
 
-    override fun getThirtyDaysLastAverageSleepLog(idUser: String, page: Int, pageSize: Int): ApiResponse<SleepLogResponse?, Meta> {
-        val sleepLogPage = getLastThirtyDaysSleepLogByIdUser(idUser, page, pageSize)
-        val sleepList = sleepLogPage.content.map { sleepLog -> sleepLogMapper.toResponseFromSleepLog(sleepLog) }
-
-        if (sleepList.isNotEmpty()) {
-            return ApiResponse.Builder<SleepLogResponse, Meta>()
+    override fun getThirtyDaysLastAverageSleepLog(idUser: String): ApiResponse<SleepLogAvgLastThirtyDaysResponse?, Meta> {
+        val sleepLogList = getLastThirtyDaysSleepLogByIdUser(idUser)
+        if (sleepLogList.isNotEmpty()) {
+            return ApiResponse.Builder<SleepLogAvgLastThirtyDaysResponse, Meta>()
                 .status("success")
-                .dataList(sleepList)
+                .data(
+                    SleepLogAvgLastThirtyDaysResponse(
+                        idUser = idUser,
+                        fromDate = getDateThirtyDaysLastByServerMachine().toString(),
+                        toDate = getDateNowByServerMachine().toString(),
+                        averageTotalTimeInBed = getAvgTimeInBed(sleepLogList),
+                        averageDateBedtimeStart = getAvgTimeHourMinuteSecond(sleepLogList),
+                        averageDateBedtimeEnd = getAvgTimeHourMinuteSecond(sleepLogList),
+                        qtdDaysGood = getQuantityOfMood(MorningFeelingEnum.GOOD.toString(), sleepLogList),
+                        qtdDaysBad = getQuantityOfMood(MorningFeelingEnum.BAD.toString(), sleepLogList),
+                        qtdDaysOk = getQuantityOfMood(MorningFeelingEnum.OK.toString(), sleepLogList),
+                    )
+                )
+                .message("The sleep log average of the last 30 days return with success!")
+                .build()
+        } else throw NotFoundException()
+    }
+
+    private fun getAvgTimeHourMinuteSecond(sleepLogList: List<SleepLog>): String {
+        var hour = 0
+        var minute = 0
+        var second = 0
+        val size = sleepLogList.size
+
+        for (sleepLog in sleepLogList) {
+            val timeTrucate = sleepLog.dateBedtimeStart.toString()
+            hour = timeTrucate.removeRange(10, 12).toInt()
+            minute = timeTrucate.removeRange(13, 15).toInt()
+            second = timeTrucate.removeRange(16, 18).toInt()
+        }
+
+        val avgHour = hour / size
+        val avgMinute = minute / size
+        val avgSecond = second / size
+
+        return LocalDate.parse("$avgHour:$avgMinute:$avgSecond", DateTimeFormatter.ofPattern("HH:mm:ss")).toString()
+
+    }
+
+    private fun getQuantityOfMood(mood: String, sleepLogList: List<SleepLog>): Int {
+        var quantity = 0
+        for (item in sleepLogList) {
+            if (item.feelingMorning == mood) ++quantity
+        }
+        return quantity
+    }
+
+    private fun getAvgTimeInBed(sleepLogList: List<SleepLog>): Double {
+        var timeInBed = 0.0
+        for (item in sleepLogList) {
+            timeInBed = ++item.totalTimeInBedMinutes
+        }
+        return timeInBed / sleepLogList.size
+    }
+
+    override fun getSleepLogPaginated(
+        idUser: String,
+        page: Int,
+        pageSize: Int
+    ): ApiResponse<List<SleepLogResponse>?, Meta> {
+        val sleepLogPage = getAllSleepLogPaginated(idUser, page, pageSize)
+        val data = sleepLogPage.content.parallelStream().map { sleepLogMapper.toResponseFromSleepLog(it) }.toList()
+
+        if (data != null) {
+            return ApiResponse.Builder<List<SleepLogResponse>, Meta>()
+                .status("success")
+                .data(data)
                 .message("SleepLog returned with success!")
-                .meta(Meta(sleepLogPage.size, sleepLogPage.totalPages, Instant.now().toString())).build()
+                .meta(Meta(data.size, sleepLogPage.totalPages, Instant.now().toString())).build()
         } else throw NotFoundException()
     }
 
@@ -102,9 +178,13 @@ class SleepLogUseCaseImplementation(
 
     private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser)).get(0)
 
-    private fun getLastThirtyDaysSleepLogByIdUser(idUser: String, page: Int, pageSize: Int): Page<SleepLog> {
+    private fun getAllSleepLogPaginated(idUser: String, page: Int, pageSize: Int): Page<SleepLog> {
         val pageable = PageRequest.of(page - 1, pageSize)
         return sleepLogRepository.findAll(SleepLogSpecification(idUser, true), pageable)
+    }
+
+    private fun getLastThirtyDaysSleepLogByIdUser(idUser: String): List<SleepLog> {
+        return sleepLogRepository.findAll(SleepLogSpecification(idUser, true))
     }
 
     private fun validateRequest(sleepLogRequest: SleepLogRequest) {
@@ -116,24 +196,24 @@ class SleepLogUseCaseImplementation(
 
     private fun validateFeelingEnum(feelingMorning: String) {
         var isNotEqual = false
-        for(feel in MorningFeelingEnum.entries) {
-            if(feelingMorning.equals(feel.toString())){
+        for (feel in MorningFeelingEnum.entries) {
+            if (feelingMorning.equals(feel.toString())) {
                 isNotEqual = true
             }
         }
-        if(!isNotEqual){
+        if (!isNotEqual) {
             throw BadRequestException()
         }
     }
 
     private fun validateSleepLogAlreadyExist(idUser: String) {
-        if(sleepLogRepository.findAll(SleepLogSpecification(idUser)).size != 0){
+        if (sleepLogRepository.findAll(SleepLogSpecification(idUser)).size != 0) {
             throw BadRequestException()
         }
     }
 
     private fun validateUser(idUser: String) {
-        if(userUseCase.getUserById(idUser) == null) {
+        if (userUseCase.getUserById(idUser) == null) {
             throw BadRequestException()
         }
     }
@@ -145,8 +225,15 @@ class SleepLogUseCaseImplementation(
         val startDateHourofSleep = sleepLogRequest.dateBedtimeStart
         val endDateHourofSleep = sleepLogRequest.dateBedtimeEnd
 
-        if(!(dateSleep.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(10, startDateHourofSleep.length)
-            || dateSleepMinusOne.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(10, startDateHourofSleep.length))){
+        if (!(dateSleep.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(
+                10,
+                startDateHourofSleep.length
+            )
+                    || dateSleepMinusOne.removeRange(10, dateSleep.length) == startDateHourofSleep.removeRange(
+                10,
+                startDateHourofSleep.length
+            ))
+        ) {
             throw BadRequestException()
         }
 
@@ -158,7 +245,11 @@ class SleepLogUseCaseImplementation(
             throw BadRequestException()
         }
 
-        if (getDifferenceOfTime(Instant.parse(startDateHourofSleep), Instant.parse(endDateHourofSleep)) < 0) throw BadRequestException()
+        if (getDifferenceOfTime(
+                Instant.parse(startDateHourofSleep),
+                Instant.parse(endDateHourofSleep)
+            ) < 0
+        ) throw BadRequestException()
     }
 }
 

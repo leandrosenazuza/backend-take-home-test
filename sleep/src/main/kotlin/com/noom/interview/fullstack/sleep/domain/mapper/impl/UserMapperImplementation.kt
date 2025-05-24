@@ -4,6 +4,7 @@ import com.noom.interview.fullstack.sleep.domain.json.request.UserRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.UserResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.UserMapper
 import com.noom.interview.fullstack.sleep.domain.model.User
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.ZoneId
@@ -16,7 +17,7 @@ class UserMapperImplementation : UserMapper {
         return User(
             idUser = UUID.randomUUID().toString(),
             username = userRequest.userName,
-            dateCreate = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
+            dateCreate = getDateNowByServerMachine(),
         )
     }
 

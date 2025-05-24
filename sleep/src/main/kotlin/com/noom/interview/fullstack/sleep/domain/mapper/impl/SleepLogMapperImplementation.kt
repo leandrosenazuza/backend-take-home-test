@@ -16,11 +16,11 @@ class SleepLogMapperImplementation() : SleepLogMapper {
     override fun toSleepLogFromRequest(sleepLogRequest: SleepLogRequest) = SleepLog(
         idUser = sleepLogRequest.idUser,
         idSleep = UUID.randomUUID().toString(),
-        dateSleep = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
+        dateSleep = getDateNowByServerMachine(),
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
         feelingMorning = sleepLogRequest.feelingMorning.toString(),
-        dateCreate = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
+        dateCreate = getDateNowByServerMachine(),
     )
 
     override fun toUpdateSleepLogFromRequest(sleepLogRequest: SleepLogRequest, sleepLog: SleepLog) = SleepLog(
@@ -30,7 +30,7 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         dateBedtimeStart = parseStringToInstant(sleepLogRequest.dateBedtimeStart),
         dateBedtimeEnd = parseStringToInstant(sleepLogRequest.dateBedtimeEnd),
         feelingMorning = sleepLogRequest.feelingMorning.toString(),
-        dateCreate = ZonedDateTime.now(ZoneId.systemDefault()).toInstant(),
+        dateCreate = getDateNowByServerMachine(),
     )
 
     override fun toResponseFromSleepLog(sleepLog: SleepLog) = SleepLogResponse(

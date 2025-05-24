@@ -3,6 +3,9 @@ package com.noom.interview.fullstack.sleep.infrastructure.util
 import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 const val DATE_ISO_8601_PATTERN = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
 const val DATE_BASIC_YYYY_MM_DD = "^\\d{4}-\\d{2}-\\d{2}$"
@@ -22,3 +25,9 @@ fun getTruncDate(date: Instant): String {
     val dateString = date.toString()
     return dateString.removeRange(10, dateString.length)
 }
+
+fun getZoneId() = ZoneId.systemDefault()
+
+fun getDateThirtyDaysLastByServerMachine() = ZonedDateTime.now(getZoneId()).minus(30, ChronoUnit.DAYS).toInstant()
+
+fun getDateNowByServerMachine() = ZonedDateTime.now(getZoneId()).toInstant()
