@@ -4,17 +4,20 @@ import com.noom.interview.fullstack.sleep.domain.json.request.UserRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.UserResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.UserMapper
 import com.noom.interview.fullstack.sleep.domain.model.User
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import org.springframework.stereotype.Component
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 
 @Component
-class UserMapperImplementation: UserMapper {
+class UserMapperImplementation : UserMapper {
     override fun toUserFromRequest(userRequest: UserRequest): User {
         return User(
             idUser = UUID.randomUUID().toString(),
             username = userRequest.userName,
-            dateCreate = Instant.now()
+            dateCreate = getDateNowByServerMachine(),
         )
     }
 
@@ -28,9 +31,8 @@ class UserMapperImplementation: UserMapper {
 
     override fun toResponseFromUser(user: User): UserResponse {
         return UserResponse(
-            userId = user.idUser,
+            idUser = user.idUser,
             userName = user.username
-
         )
     }
 }

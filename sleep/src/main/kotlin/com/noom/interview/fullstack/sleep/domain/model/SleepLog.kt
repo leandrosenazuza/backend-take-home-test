@@ -1,6 +1,9 @@
 package com.noom.interview.fullstack.sleep.domain.model
 
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 import javax.persistence.*
 
@@ -12,7 +15,7 @@ data class SleepLog(
     val idSleep: String = UUID.randomUUID().toString(),
 
     @Column(name = "id_user", nullable = false)
-    val userId: String = "",
+    val idUser: String = "",
 
     @Column(name = "dat_sleep_date", nullable = false)
     val dateSleep: Instant,
@@ -24,11 +27,11 @@ data class SleepLog(
     val dateBedtimeEnd: Instant,
 
     @Column(name = "val_total_time_bed_minutes")
-    val totalTimeInBedMinutes: Double = 0.0,
+    var totalTimeInBedMinutes: Double = 0.0,
 
     @Column(name = "ind_feeling_morning", nullable = false)
     val feelingMorning: String = "",
 
     @Column(name = "dat_create")
-    val dateCreate: Instant = Instant.now()
+    val dateCreate: Instant = getDateNowByServerMachine()
 )

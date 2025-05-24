@@ -7,7 +7,7 @@ data class ApiResponse<T, E>(
     var status: String = EnumSuccess.SUCCESS.value,
     var message: String = "",
     var data: T? = null,
-    var meta: E? = null
+    var meta: E? = null,
 ) {
     class Builder<T, E> {
         private var status: String = EnumSuccess.SUCCESS.value

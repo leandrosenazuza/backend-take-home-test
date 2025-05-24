@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface UserRepository: JpaRepository <User, String>{
-    @Query("select u.* from tab_user u where u.id_user  = :userId", nativeQuery = true)
-    fun findByIdUser(@Param("userId") userId: String) : User?
+    @Query("select u.* from tab_user u where u.id_user  = :idUser", nativeQuery = true)
+    fun findByIdUser(@Param("idUser") idUser: String) : User?
 }

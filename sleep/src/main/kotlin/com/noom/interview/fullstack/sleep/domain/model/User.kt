@@ -1,6 +1,9 @@
 package com.noom.interview.fullstack.sleep.domain.model
 
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 import javax.persistence.*
 
@@ -14,5 +17,5 @@ data class User(
     val username: String,
 
     @Column(name = "dat_create", nullable = false)
-    val dateCreate: Instant = Instant.now()
+    val dateCreate: Instant = getDateNowByServerMachine(),
 )
