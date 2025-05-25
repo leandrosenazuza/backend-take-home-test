@@ -5,6 +5,7 @@ import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
 import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
+import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
@@ -109,7 +110,4 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
             sleepLogUseCaseImpl.validateDates(request)
         }
     }
-
-    private fun localDateTimeToInstant(date: LocalDate, hour: Int, minute: Int): Instant =
-        date.atTime(hour, minute).atZone(getZoneId()).toInstant()
 }

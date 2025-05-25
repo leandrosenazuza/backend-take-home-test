@@ -1,14 +1,20 @@
 package com.noom.interview.fullstack.sleep.infrastructure.controller.impl
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.noom.interview.fullstack.sleep.AbstractTest
 import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_ALL_DAYS_SLEEP_BY_ID_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_SLEEP_LOG_V1
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
 import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
 import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.model.createUserEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
+import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
 import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
+import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
+import jdk.jshell.Snippet.Status
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -46,6 +52,97 @@ class SleepLogControllerImplementationTest : AbstractTest() {
     @BeforeEach
     fun setUp() {
         sleepLogRepository.deleteAll()
+    }
+
+    @Test
+    fun `Should successfully get last night sleep log information`() {
+        // Arrange
+        val idUser = UUID.randomUUID().toString()
+        val user = createUserEntityMock(idUser = idUser)
+        userRepository.save(user)
+
+        val nowDate = LocalDate.now(getZoneId())
+        val yesterday = nowDate.minusDays(1)
+        val bedtimeStart = localDateTimeToInstant(yesterday, 22, 0)
+        val bedtimeEnd = localDateTimeToInstant(nowDate, 7, 31)
+        val averageMinutesInBed = getDifferenceOfTime(bedtimeStart, bedtimeEnd)
+
+        val sleepLog = createSleepLogEntityMock(
+            idUser = idUser,
+            dateBedtimeStart = bedtimeStart,
+            dateBedtimeEnd = bedtimeEnd,
+            totalTimeInBedMinutes = averageMinutesInBed
+        )
+        sleepLogRepository.save(sleepLog)
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLog.feelingMorning))
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should return NOT FOUND when user has no sleep log for last night`() {
+        val idUser = UUID.randomUUID().toString()
+        val user = createUserEntityMock(idUser = idUser)
+        userRepository.save(user)
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(MockMvcResultMatchers.status().isNotFound)
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should return 404 when user not found`() {
+        val nonExistentUserId = "some-non-existent-user"
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1.replace("{idUser}", nonExistentUserId))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(MockMvcResultMatchers.status().isNotFound)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+    }
+
+    @Test
+    fun `Should successfully create a new sleep log`() {
+        val idUser = UUID.randomUUID().toString()
+        val user = createUserEntityMock(idUser = idUser)
+        userRepository.save(user)
+
+        val nowDate = LocalDate.now(getZoneId())
+        val yesterday = nowDate.minusDays(1)
+        val bedtimeStart = localDateTimeToInstant(yesterday, 22, 0)
+        val bedtimeEnd = localDateTimeToInstant(nowDate, 7, 31)
+        val averageMinutesInBed = getDifferenceOfTime(bedtimeStart, bedtimeEnd)
+        val sleepLogRequest = createSleepLogRequestMock(idUser = idUser, bedtimeStart = bedtimeStart.toString(), bedtimeEnd = bedtimeEnd.toString())
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.post(URI_POST_SLEEP_LOG_V1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(ObjectMapper().writeValueAsString(sleepLogRequest))
+        )
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLogRequest.feelingMorning))
+            .andDo(MockMvcResultHandlers.print())
     }
 
     @Test
@@ -93,6 +190,5 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.totalPages").value(3))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.requestDateTime").exists())
             .andDo(MockMvcResultHandlers.print())
-
     }
 }

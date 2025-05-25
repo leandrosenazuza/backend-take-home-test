@@ -89,7 +89,7 @@ class SleepLogUseCaseImplementation(
         if (sleepLog != null) {
             return ApiResponse.Builder<SleepLogResponse, Meta>()
                 .status("success")
-                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog))
+                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog.get(0)))
                 .message("SleepLog returned with success!")
                 .meta(Meta(1, 1, Instant.now().toString())).build()
         } else throw NotFoundException()
@@ -179,7 +179,7 @@ class SleepLogUseCaseImplementation(
 
     private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)
 
-    private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser)).get(0)
+    private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser))
 
     private fun getAllSleepLogPaginated(idUser: String, page: Int, pageSize: Int): Page<SleepLog> {
         val pageable = PageRequest.of(page - 1, pageSize)
