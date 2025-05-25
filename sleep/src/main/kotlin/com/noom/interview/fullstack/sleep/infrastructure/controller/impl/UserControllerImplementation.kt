@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import java.net.URI
 import javax.validation.Valid
 
 @RestController
@@ -32,7 +33,7 @@ class UserControllerImplementation(@Autowired val userUserCase: UserUseCase) : U
     override fun createUser(@RequestBody userRequest: UserRequest): ResponseEntity<ApiResponse<UserResponse?, Meta>> {
         logger.info("Request to POST user by body: + $userRequest")
         val response = userUserCase.createUser(userRequest)
-        return ResponseEntity.ok(response)
+        return ResponseEntity.created(URI(URI_POST_USER_V1)).body(response)
     }
 
     @PutMapping(URI_PUT_USER_V1)
