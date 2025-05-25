@@ -174,7 +174,7 @@ class SleepLogUseCaseImplementation(
             .status("success")
             .data(data)
             .message("SleepLog returned with success!")
-            .meta(Meta(data.size, sleepLogPage.totalPages, Instant.now().toString())).build()
+            .meta(Meta(totalRecords = sleepLogPage.totalElements.toInt(), totalPages = sleepLogPage.totalPages, requestDateTime = Instant.now().toString())).build()
     }
 
     private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)
@@ -221,7 +221,7 @@ class SleepLogUseCaseImplementation(
         }
     }
 
-    private fun validateDates(sleepLogRequest: SleepLogRequest) {
+    fun validateDates(sleepLogRequest: SleepLogRequest) {
         fun parseInstant(str: String): Instant? =
             runCatching { Instant.parse(str) }.getOrNull()
 
