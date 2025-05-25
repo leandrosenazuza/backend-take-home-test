@@ -86,10 +86,10 @@ class SleepLogUseCaseImplementation(
 
     override fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse?, Meta> {
         val sleepLog = getSleepLogByIdUser(idUser)
-        if (sleepLog != null) {
+        if (sleepLog.size > 0) {
             return ApiResponse.Builder<SleepLogResponse, Meta>()
                 .status("success")
-                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog))
+                .data(sleepLogMapper.toResponseFromSleepLog(sleepLog.get(0)))
                 .message("SleepLog returned with success!")
                 .meta(Meta(1, 1, Instant.now().toString())).build()
         } else throw NotFoundException()
@@ -174,12 +174,12 @@ class SleepLogUseCaseImplementation(
             .status("success")
             .data(data)
             .message("SleepLog returned with success!")
-            .meta(Meta(data.size, sleepLogPage.totalPages, Instant.now().toString())).build()
+            .meta(Meta(totalRecords = sleepLogPage.totalElements.toInt(), totalPages = sleepLogPage.totalPages, requestDateTime = Instant.now().toString())).build()
     }
 
     private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)
 
-    private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser)).get(0)
+    private fun getSleepLogByIdUser(idUser: String) = sleepLogRepository.findAll(SleepLogSpecification(idUser))
 
     private fun getAllSleepLogPaginated(idUser: String, page: Int, pageSize: Int): Page<SleepLog> {
         val pageable = PageRequest.of(page - 1, pageSize)
@@ -221,31 +221,47 @@ class SleepLogUseCaseImplementation(
         }
     }
 
-    private fun validateDates(sleepLogRequest: SleepLogRequest) {
+    fun validateDates(sleepLogRequest: SleepLogRequest) {
+
         fun parseInstant(str: String): Instant? =
             runCatching { Instant.parse(str) }.getOrNull()
 
         val startInstant = parseInstant(sleepLogRequest.dateBedtimeStart)
-            ?: throw BadRequestException("Start date not ISO8601")
+            ?: throw BadRequestException("Start date not in valid ISO8601 format.")
         val endInstant = parseInstant(sleepLogRequest.dateBedtimeEnd)
-            ?: throw BadRequestException("End date not ISO8601")
+            ?: throw BadRequestException("End date not in valid ISO8601 format.")
 
         if (!endInstant.isAfter(startInstant)) {
-            throw BadRequestException("End must be after start")
+            throw BadRequestException("End time must be after start time.")
         }
 
-        val nowDate = LocalDate.now(ZoneId.systemDefault())
+        val systemZone = ZoneId.systemDefault()
+        val nowDate = LocalDate.now(systemZone)
         val yesterdayDate = nowDate.minusDays(1)
 
-        val startDate = startInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-        val endDate = endInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+        val startDate = startInstant.atZone(systemZone).toLocalDate()
+        val endDate = endInstant.atZone(systemZone).toLocalDate()
 
-        if (startDate != nowDate && startDate != yesterdayDate) {
-            throw BadRequestException("Start date must be today or yesterday")
-        }
+        if (startDate == nowDate || startDate == yesterdayDate) {
+            if (endDate != nowDate && endDate != startDate) {
+                throw BadRequestException(
+                    "For recent sleep entries (today/yesterday), the end date must be today or the same day as the start date."
+                )
+            }
+        } else {
+            if (startDate.isAfter(nowDate)) {
+                throw BadRequestException("Historical sleep log start date cannot be in the future.")
+            }
 
-        if (endDate != nowDate && endDate != startDate) {
-            throw BadRequestException("End date must be today or same as start date")
+            if (endDate.isAfter(nowDate)) {
+                throw BadRequestException("Historical sleep log end date cannot be in the future.")
+            }
+
+            if (endDate.isAfter(startDate.plusDays(1))) {
+                throw BadRequestException(
+                    "Historical sleep session cannot span more than two days (e.g., bedtime Jan 1st, wake-up Jan 2nd is max)."
+                )
+            }
         }
     }
 }

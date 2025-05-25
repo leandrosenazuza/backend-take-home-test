@@ -6,9 +6,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest
 @ActiveProfiles(UNIT_TEST_PROFILE)
-class SleepApplicationTests {
+class SleepApplicationTests : AbstractTest(){
 
 	@Test
 	fun contextLoads() {
