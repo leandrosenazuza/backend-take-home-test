@@ -30,7 +30,7 @@ class UserUseCaseImplementation(
                 .meta(Meta(1, 1, Instant.now().toString())).build()
         }
     }
-    
+
     override fun createUser(userRequest: UserRequest): ApiResponse<UserResponse?, Meta> {
         validateName(userRequest.userName)
         var user: User = userMapper.toUserFromRequest(userRequest)
@@ -42,6 +42,7 @@ class UserUseCaseImplementation(
     }
 
     override fun updateUser(userRequest: UserRequest, idUser: String): ApiResponse<UserResponse?, Meta> {
+        validateName(userRequest.userName)
         val user = getUserById(idUser)
         if (user != null) {
             var userUpdated: User = userMapper.toUpdateUserFromRequest(userRequest, user)
@@ -68,7 +69,7 @@ class UserUseCaseImplementation(
         userRepository.findByIdUser(idUser)
 
     private fun validateName(userName: String) {
-        if(userName.isBlank() || !userName.matches(Regex("^[A-Za-z ]+\$"))) {
+        if (userName.isBlank() || !userName.matches(Regex("^[A-Za-z ]+\$"))) {
             throw BadRequestException()
         }
     }

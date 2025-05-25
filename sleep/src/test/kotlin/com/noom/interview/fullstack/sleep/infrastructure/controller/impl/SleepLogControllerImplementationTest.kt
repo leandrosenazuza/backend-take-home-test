@@ -29,7 +29,7 @@ import org.springframework.web.context.WebApplicationContext
 import java.time.LocalDate
 import java.util.*
 
-@Tag("IntegrationTest")
+@Tag("SleepLogIntegrationTest")
 class SleepLogControllerImplementationTest : AbstractTest() {
 
     @Autowired
