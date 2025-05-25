@@ -14,18 +14,12 @@ import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestExc
 import com.noom.interview.fullstack.sleep.infrastructure.exception.NotFoundException
 import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDateThirtyDaysLastByServerMachine
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
-import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
+import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 import kotlin.streams.toList
 
@@ -101,27 +95,48 @@ class SleepLogUseCaseImplementation(
     override fun getThirtyDaysLastAverageSleepLog(idUser: String): ApiResponse<SleepLogAvgLastThirtyDaysResponse?, Meta> {
         val sleepLogList = getLastThirtyDaysSleepLogByIdUser(idUser)
         if (sleepLogList.isNotEmpty()) {
+            val data = SleepLogAvgLastThirtyDaysResponse(
+                idUser = idUser,
+                fromDate = getDateThirtyDaysLastByServerMachine().toString(),
+                toDate = getDateNowByServerMachine().toString(),
+                qtdDaysGood = getQuantityOfMood(MorningFeelingEnum.GOOD.toString(), sleepLogList),
+                qtdDaysBad = getQuantityOfMood(MorningFeelingEnum.BAD.toString(), sleepLogList),
+                qtdDaysOk = getQuantityOfMood(MorningFeelingEnum.OK.toString(), sleepLogList),
+            )
+
+            data.averageDateBedtimeStartAndEndFormatted = formatStartAndEndInterval(
+                getAvgTimeHourMinuteSecondStart(sleepLogList),
+                getAvgTimeHourMinuteSecondEnd(sleepLogList)
+            )
+            data.averageTotalTimeInBedFormatted = formatTimeInBed(
+                calculateTotalTimeInBedAsDouble(
+                    data.averageDateBedtimeStartAndEndFormatted)
+            )
+
             return ApiResponse.Builder<SleepLogAvgLastThirtyDaysResponse, Meta>()
                 .status("success")
-                .data(
-                    SleepLogAvgLastThirtyDaysResponse(
-                        idUser = idUser,
-                        fromDate = getDateThirtyDaysLastByServerMachine().toString(),
-                        toDate = getDateNowByServerMachine().toString(),
-                        averageTotalTimeInBed = getAvgTimeInBed(sleepLogList),
-                        averageDateBedtimeStart = getAvgTimeHourMinuteSecondStart(sleepLogList),
-                        averageDateBedtimeEnd = getAvgTimeHourMinuteSecondEnd(sleepLogList),
-                        qtdDaysGood = getQuantityOfMood(MorningFeelingEnum.GOOD.toString(), sleepLogList),
-                        qtdDaysBad = getQuantityOfMood(MorningFeelingEnum.BAD.toString(), sleepLogList),
-                        qtdDaysOk = getQuantityOfMood(MorningFeelingEnum.OK.toString(), sleepLogList),
-                    )
-                )
+                .data(data)
                 .message("The sleep log average of the last 30 days return with success!")
                 .build()
         } else throw NotFoundException()
     }
 
-    private fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): String {
+    private fun calculateTotalTimeInBedAsDouble(interval: String): Double {
+        val times = interval.split(" - ")
+        val formatter = DateTimeFormatter.ofPattern("h:mm a")
+
+        val start = LocalTime.parse(times[0].uppercase(), formatter)
+        val end = LocalTime.parse(times[1].uppercase(), formatter)
+
+        var durationMinutes = Duration.between(start, end).toMinutes()
+        if (durationMinutes < 0) {
+            durationMinutes += 24 * 60
+        }
+
+        return durationMinutes.toDouble()
+    }
+
+    private fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
@@ -132,10 +147,36 @@ class SleepLogUseCaseImplementation(
         val avgSeconds = totalSeconds / sleepLogList.size
         val avgTime = LocalTime.ofSecondOfDay(avgSeconds)
 
-        return avgTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val today = ZonedDateTime.now(getZoneId()).toLocalDate()
+        val zonedDateTime = avgTime.atDate(today).atZone(getZoneId())
+
+        return zonedDateTime.toInstant()
     }
 
-    private fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): String {
+    private fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): Instant {
+        var totalSeconds = 0L
+
+        for (sleepLog in sleepLogList) {
+            var localTime = sleepLog.dateBedtimeEnd.atZone(getZoneId()).toLocalTime()
+
+            // Adjust for crossing midnight
+            if (localTime.isBefore(sleepLog.dateBedtimeStart.atZone(getZoneId()).toLocalTime())) {
+                localTime = localTime.plusHours(24)
+            }
+
+            totalSeconds += localTime.toSecondOfDay()
+        }
+
+        val avgSeconds = totalSeconds / sleepLogList.size
+        val avgTime = LocalTime.ofSecondOfDay(avgSeconds)
+
+        val today = ZonedDateTime.now(getZoneId()).toLocalDate()
+        val zonedDateTime = avgTime.atDate(today).atZone(getZoneId())
+
+        return zonedDateTime.toInstant()
+    }
+
+    private fun getAvgTimeHourMinuteSecondEndString(sleepLogList: List<SleepLog>): String {
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
@@ -177,7 +218,13 @@ class SleepLogUseCaseImplementation(
             .status("success")
             .data(data)
             .message("SleepLog returned with success!")
-            .meta(Meta(totalRecords = sleepLogPage.totalElements.toInt(), totalPages = sleepLogPage.totalPages, requestDateTime = Instant.now().toString())).build()
+            .meta(
+                Meta(
+                    totalRecords = sleepLogPage.totalElements.toInt(),
+                    totalPages = sleepLogPage.totalPages,
+                    requestDateTime = Instant.now().toString()
+                )
+            ).build()
     }
 
     private fun getSleepLog(idSleep: String) = sleepLogRepository.findByIdSleepLog(idSleep)

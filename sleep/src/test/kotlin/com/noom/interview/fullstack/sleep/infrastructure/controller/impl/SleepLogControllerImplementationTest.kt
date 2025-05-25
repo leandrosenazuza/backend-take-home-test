@@ -2,10 +2,7 @@ package com.noom.interview.fullstack.sleep.infrastructure.controller.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.noom.interview.fullstack.sleep.AbstractTest
-import com.noom.interview.fullstack.sleep.domain.constants.URI_DELETE_SLEEP_LOG_V1
-import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_ALL_DAYS_SLEEP_BY_ID_USER_V1
-import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1
-import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_SLEEP_LOG_V1
+import com.noom.interview.fullstack.sleep.domain.constants.*
 import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
@@ -230,10 +227,48 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].dateBedtimeStart").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].dateBedtimeEnd").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].totalTimeInBedMinutes").value(540.0))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].feelingMorning").value("GOOD"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].feelingMorning").value(MorningFeelingEnum.GOOD.displayName))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.totalRecords").value(61))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.totalPages").value(3))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.requestDateTime").exists())
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should respond with the correct average time interval for the last 30 days of sleep log`() {
+        val idUser = UUID.randomUUID().toString()
+        val zoneId = getZoneId()
+
+        userRepository.save(createUserEntityMock(idUser = idUser))
+
+        for (i in 0..60) {
+            val currentDate = LocalDate.now(zoneId).minusDays(i.toLong())
+            val previousDate = currentDate.minusDays(1)
+
+            val sleepLog = SleepLog(
+                idUser = idUser,
+                dateSleep = currentDate.atStartOfDay(zoneId).toInstant(),
+                dateBedtimeStart = previousDate.atTime(22, 0).atZone(zoneId).toInstant(),
+                dateBedtimeEnd = currentDate.atTime(7, 0).atZone(zoneId).toInstant(),
+                totalTimeInBedMinutes = 540.0,
+                feelingMorning = "GOOD"
+            )
+            sleepLogRepository.save(sleepLog)
+        }
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("The sleep log average of the last 30 days return with success!"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("9 h 0 min"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted").value("10:00 pm - 7:00 am"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysGood").value(30))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(0))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(0))
             .andDo(MockMvcResultHandlers.print())
     }
 }
