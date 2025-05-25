@@ -4,10 +4,7 @@ import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
-import com.noom.interview.fullstack.sleep.infrastructure.util.formatTimeInBed
-import com.noom.interview.fullstack.sleep.infrastructure.util.formatTodayDate
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
-import com.noom.interview.fullstack.sleep.infrastructure.util.parseStringToInstant
+import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -40,7 +37,8 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         dateBedtimeStart = sleepLog.dateBedtimeStart.toString(),
         dateBedtimeEnd = sleepLog.dateBedtimeEnd.toString(),
         totalTimeInBedMinutes = sleepLog.totalTimeInBedMinutes,
-        totalTimeInBedFormated = formatTimeInBed(sleepLog.totalTimeInBedMinutes),
+        totalTimeInBedFormatted = formatTimeInBed(sleepLog.totalTimeInBedMinutes),
+        dateBedtimeStartAndEndFormatted = formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd),
         feelingMorning = sleepLog.feelingMorning,
     )
 }

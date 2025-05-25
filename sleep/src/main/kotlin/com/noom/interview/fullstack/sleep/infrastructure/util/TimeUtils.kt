@@ -23,6 +23,15 @@ fun parseStringToInstant(date: String): Instant {
     } else throw BadRequestException()
 }
 
+fun formatStartAndEndInterval(start: Instant, end: Instant): String {
+    val timeFormat = SimpleDateFormat("h:mm a", Locale.ENGLISH)
+
+    val startTime = timeFormat.format(Date.from(start)).lowercase()
+    val endTime = timeFormat.format(Date.from(end)).lowercase()
+
+    return "$startTime - $endTime"
+}
+
 fun formatTimeInBed(totalMinutes: Double): String {
     val hours = totalMinutes.toInt() / 60
     val minutes = (totalMinutes % 60).toInt()
