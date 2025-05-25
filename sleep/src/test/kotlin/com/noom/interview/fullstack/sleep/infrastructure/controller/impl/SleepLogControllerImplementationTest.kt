@@ -12,6 +12,7 @@ import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
 import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.model.createUserEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
+import com.noom.interview.fullstack.sleep.infrastructure.util.formatTodayDate
 import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
 import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
 import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
@@ -117,6 +118,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value(formatTodayDate(sleepLog.dateSleep)))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLog.feelingMorning))

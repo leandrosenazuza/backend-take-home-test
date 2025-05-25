@@ -6,6 +6,8 @@ data class SleepLogResponse (
     val dateSleep: String = "",
     val dateBedtimeStart: String,
     val dateBedtimeEnd: String,
+    val dateBedtimeStartAndEnd: String = "",
     val totalTimeInBedMinutes: Double,
+    val totalTimeInBedFormated: String = "0.0",
     val feelingMorning: String = ""
 )
