@@ -86,7 +86,7 @@ class SleepLogUseCaseImplementation(
 
     override fun getLastNightSleepLogInformation(idUser: String): ApiResponse<SleepLogResponse?, Meta> {
         val sleepLog = getSleepLogByIdUser(idUser)
-        if (sleepLog != null) {
+        if (sleepLog.size > 0) {
             return ApiResponse.Builder<SleepLogResponse, Meta>()
                 .status("success")
                 .data(sleepLogMapper.toResponseFromSleepLog(sleepLog.get(0)))
@@ -222,30 +222,46 @@ class SleepLogUseCaseImplementation(
     }
 
     fun validateDates(sleepLogRequest: SleepLogRequest) {
+
         fun parseInstant(str: String): Instant? =
             runCatching { Instant.parse(str) }.getOrNull()
 
         val startInstant = parseInstant(sleepLogRequest.dateBedtimeStart)
-            ?: throw BadRequestException("Start date not ISO8601")
+            ?: throw BadRequestException("Start date not in valid ISO8601 format.")
         val endInstant = parseInstant(sleepLogRequest.dateBedtimeEnd)
-            ?: throw BadRequestException("End date not ISO8601")
+            ?: throw BadRequestException("End date not in valid ISO8601 format.")
 
         if (!endInstant.isAfter(startInstant)) {
-            throw BadRequestException("End must be after start")
+            throw BadRequestException("End time must be after start time.")
         }
 
-        val nowDate = LocalDate.now(ZoneId.systemDefault())
+        val systemZone = ZoneId.systemDefault()
+        val nowDate = LocalDate.now(systemZone)
         val yesterdayDate = nowDate.minusDays(1)
 
-        val startDate = startInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-        val endDate = endInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+        val startDate = startInstant.atZone(systemZone).toLocalDate()
+        val endDate = endInstant.atZone(systemZone).toLocalDate()
 
-        if (startDate != nowDate && startDate != yesterdayDate) {
-            throw BadRequestException("Start date must be today or yesterday")
-        }
+        if (startDate == nowDate || startDate == yesterdayDate) {
+            if (endDate != nowDate && endDate != startDate) {
+                throw BadRequestException(
+                    "For recent sleep entries (today/yesterday), the end date must be today or the same day as the start date."
+                )
+            }
+        } else {
+            if (startDate.isAfter(nowDate)) {
+                throw BadRequestException("Historical sleep log start date cannot be in the future.")
+            }
 
-        if (endDate != nowDate && endDate != startDate) {
-            throw BadRequestException("End date must be today or same as start date")
+            if (endDate.isAfter(nowDate)) {
+                throw BadRequestException("Historical sleep log end date cannot be in the future.")
+            }
+
+            if (endDate.isAfter(startDate.plusDays(1))) {
+                throw BadRequestException(
+                    "Historical sleep session cannot span more than two days (e.g., bedtime Jan 1st, wake-up Jan 2nd is max)."
+                )
+            }
         }
     }
 }
