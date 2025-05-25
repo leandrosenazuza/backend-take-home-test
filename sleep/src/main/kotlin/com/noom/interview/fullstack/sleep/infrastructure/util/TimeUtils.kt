@@ -3,7 +3,6 @@ package com.noom.interview.fullstack.sleep.infrastructure.util
 import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import java.text.SimpleDateFormat
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -22,11 +21,6 @@ fun parseStringToInstant(date: String): Instant {
     else if (date.matches(Regex(DATE_ISO_8601_PATTERN))) {
         return Instant.parse(date)
     } else throw BadRequestException()
-}
-
-fun getTruncDate(date: Instant): String {
-    val dateString = date.toString()
-    return dateString.removeRange(10, dateString.length)
 }
 
 fun formatTodayDate(date: Instant): String {

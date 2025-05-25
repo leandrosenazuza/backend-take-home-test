@@ -6,7 +6,6 @@ import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.infrastructure.util.formatTodayDate
 import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
-import com.noom.interview.fullstack.sleep.infrastructure.util.getTruncDate
 import com.noom.interview.fullstack.sleep.infrastructure.util.parseStringToInstant
 import org.springframework.stereotype.Component
 import java.util.*

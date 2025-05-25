@@ -1,6 +1,9 @@
 package com.noom.interview.fullstack.sleep.infrastructure.controller.impl
 
-import com.noom.interview.fullstack.sleep.domain.constants.*
+import com.noom.interview.fullstack.sleep.domain.constants.URI_DELETE_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_PUT_USER_V1
 import com.noom.interview.fullstack.sleep.domain.json.request.UserRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.UserResponse
 import com.noom.interview.fullstack.sleep.domain.usecase.UserUseCase
@@ -13,7 +16,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.net.URI
-import javax.validation.Valid
 
 @RestController
 @Validated
