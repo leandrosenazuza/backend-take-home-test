@@ -11,6 +11,7 @@ import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.model.createUserEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
 import com.noom.interview.fullstack.sleep.infrastructure.util.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.web.context.WebApplicationContext
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Tag("SleepLogIntegrationTest")
@@ -76,10 +78,15 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value(formatTodayDate(sleepLog.dateSleep)))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value("2025-05-25T01:00:00Z"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value("2025-05-25T10:00:00Z"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormatted").value(formatTimeInBed(sleepLog.totalTimeInBedMinutes)))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStartAndEndFormatted").value(
-                formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
-            ))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormatted")
+                    .value(formatTimeInBed(sleepLog.totalTimeInBedMinutes))
+            )
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStartAndEndFormatted").value(
+                    formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
+                )
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value("540.0"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idSleep").value(savedSleepLog.idSleep))
             .andDo(MockMvcResultHandlers.print())
@@ -118,13 +125,21 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value(formatTodayDate(sleepLog.dateSleep)))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormatted").value(formatTimeInBed(sleepLog.totalTimeInBedMinutes)))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormatted")
+                    .value(formatTimeInBed(sleepLog.totalTimeInBedMinutes))
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStartAndEndFormatted").value(
-                formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
-            ))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStartAndEndFormatted").value(
+                    formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
+                )
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(MorningFeelingEnum.fromString(sleepLog.feelingMorning)?.displayName))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.feelingMorning")
+                    .value(MorningFeelingEnum.fromString(sleepLog.feelingMorning)?.displayName)
+            )
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -183,26 +198,94 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(MorningFeelingEnum.fromString(sleepLogRequest.feelingMorning)?.displayName))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.feelingMorning")
+                    .value(MorningFeelingEnum.fromString(sleepLogRequest.feelingMorning)?.displayName)
+            )
             .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should successfully update a sleep log in the past`() {
+        val idUser = UUID.randomUUID().toString()
+        val user = createUserEntityMock(idUser = idUser)
+        userRepository.save(user)
+
+        val oldDateSleep = LocalDate.now(getZoneId()).minusMonths(1)
+        val oldBedtimeStart = oldDateSleep.minusDays(1).atTime(23, 0).atZone(getZoneId()).toInstant()
+        val oldBedtimeEnd = oldDateSleep.atTime(8, 0).atZone(getZoneId()).toInstant()
+        val originalTotalTimeInBed = getDifferenceOfTime(oldBedtimeStart, oldBedtimeEnd)
+
+        val existingSleepLog = createSleepLogEntityMock(
+            idUser = idUser,
+            dateSleep = oldDateSleep.atStartOfDay(getZoneId()).toInstant(),
+            dateBedtimeStart = oldBedtimeStart,
+            dateBedtimeEnd = oldBedtimeEnd,
+            totalTimeInBedMinutes = originalTotalTimeInBed,
+            feelingMorning = "OK"
+        )
+        val savedSleepLog = sleepLogRepository.save(existingSleepLog)
+
+        val updatedFeeling = "GOOD"
+        val updatedBedtimeStart = oldDateSleep.minusDays(1).atTime(22, 30).atZone(getZoneId()).toInstant()
+        val updatedBedtimeEnd = oldDateSleep.atTime(7, 30).atZone(getZoneId()).toInstant()
+        val updatedTotalTimeInBed = getDifferenceOfTime(updatedBedtimeStart, updatedBedtimeEnd)
+
+        val sleepLogRequest = createSleepLogRequestMock(
+            idUser = idUser,
+            dateSleep = oldDateSleep,
+            bedtimeStart = updatedBedtimeStart.toString(),
+            bedtimeEnd = updatedBedtimeEnd.toString(),
+            feelingMorning = updatedFeeling
+        )
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.put(URI_PUT_SLEEP_LOG_V1.replace("{idSleep}", savedSleepLog.idSleep))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    (ObjectMapper().writeValueAsString(sleepLogRequest))
+                )
+        )
+            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idSleep").value(savedSleepLog.idSleep))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.dateSleep")
+                    .value(formatTodayDate(oldDateSleep.atStartOfDay(getZoneId()).toInstant()))
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(updatedBedtimeStart.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(updatedBedtimeEnd.toString()))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(updatedTotalTimeInBed))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(MorningFeelingEnum.GOOD.displayName)
+            )
+            .andDo(MockMvcResultHandlers.print())
+
+        val updatedSleepLog = sleepLogRepository.findById(savedSleepLog.idSleep).orElse(null)
+        assertEquals(savedSleepLog.idSleep, updatedSleepLog.idSleep)
+        assertEquals(updatedFeeling, updatedSleepLog.feelingMorning)
+        assertEquals(updatedBedtimeStart, updatedSleepLog.dateBedtimeStart)
+        assertEquals(updatedBedtimeEnd, updatedSleepLog.dateBedtimeEnd)
+        assertEquals(updatedTotalTimeInBed, updatedSleepLog.totalTimeInBedMinutes)
     }
 
     @Test
     fun `Should respond OK for a sleep log paginated of 60 sleep log registers`() {
         val idUser = UUID.randomUUID().toString()
-        val zoneId = getZoneId()
 
         userRepository.save(createUserEntityMock(idUser = idUser))
 
         for (i in 0..60) {
-            val currentDate = LocalDate.now(zoneId).minusDays(i.toLong())
+            val currentDate = LocalDate.now(getZoneId()).minusDays(i.toLong())
             val previousDate = currentDate.minusDays(1)
 
             val sleepLog = SleepLog(
                 idUser = idUser,
-                dateSleep = currentDate.atStartOfDay(zoneId).toInstant(),
-                dateBedtimeStart = previousDate.atTime(22, 0).atZone(zoneId).toInstant(),
-                dateBedtimeEnd = currentDate.atTime(7, 0).atZone(zoneId).toInstant(),
+                dateSleep = currentDate.atStartOfDay(getZoneId()).toInstant(),
+                dateBedtimeStart = previousDate.atTime(22, 0).atZone(getZoneId()).toInstant(),
+                dateBedtimeEnd = currentDate.atTime(7, 0).atZone(getZoneId()).toInstant(),
                 totalTimeInBedMinutes = 540.0,
                 feelingMorning = "GOOD"
             )
@@ -227,7 +310,9 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].dateBedtimeStart").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].dateBedtimeEnd").exists())
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].totalTimeInBedMinutes").value(540.0))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].feelingMorning").value(MorningFeelingEnum.GOOD.displayName))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data[0].feelingMorning").value(MorningFeelingEnum.GOOD.displayName)
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.totalRecords").value(61))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.totalPages").value(3))
             .andExpect(MockMvcResultMatchers.jsonPath("$.meta.requestDateTime").exists())
@@ -237,19 +322,18 @@ class SleepLogControllerImplementationTest : AbstractTest() {
     @Test
     fun `Should respond with the correct average time interval for the last 30 days of sleep log`() {
         val idUser = UUID.randomUUID().toString()
-        val zoneId = getZoneId()
 
         userRepository.save(createUserEntityMock(idUser = idUser))
 
         for (i in 0..60) {
-            val currentDate = LocalDate.now(zoneId).minusDays(i.toLong())
+            val currentDate = LocalDate.now(getZoneId()).minusDays(i.toLong())
             val previousDate = currentDate.minusDays(1)
 
             val sleepLog = SleepLog(
                 idUser = idUser,
-                dateSleep = currentDate.atStartOfDay(zoneId).toInstant(),
-                dateBedtimeStart = previousDate.atTime(22, 0).atZone(zoneId).toInstant(),
-                dateBedtimeEnd = currentDate.atTime(7, 0).atZone(zoneId).toInstant(),
+                dateSleep = currentDate.atStartOfDay(getZoneId()).toInstant(),
+                dateBedtimeStart = previousDate.atTime(22, 0).atZone(getZoneId()).toInstant(),
+                dateBedtimeEnd = currentDate.atTime(7, 0).atZone(getZoneId()).toInstant(),
                 totalTimeInBedMinutes = 540.0,
                 feelingMorning = "GOOD"
             )
@@ -262,10 +346,16 @@ class SleepLogControllerImplementationTest : AbstractTest() {
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("The sleep log average of the last 30 days return with success!"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.message")
+                    .value("The sleep log average of the last 30 days return with success!")
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("9 h 0 min"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted").value("10:00 pm - 7:00 am"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted")
+                    .value("10:00 pm - 7:00 am")
+            )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysGood").value(30))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(0))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(0))

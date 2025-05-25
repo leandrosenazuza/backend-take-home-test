@@ -31,6 +31,7 @@ class SleepLogUseCaseImplementation(
 ) : SleepLogUseCase {
 
     override fun createSleepLog(sleepLogRequest: SleepLogRequest): ApiResponse<SleepLogResponse?, Meta> {
+        validateTodayDate(sleepLogRequest)
         validateRequest(sleepLogRequest)
         val sleepLog: SleepLog = sleepLogMapper.toSleepLogFromRequest(sleepLogRequest)
         sleepLog.totalTimeInBedMinutes = getDifferenceOfTime(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
@@ -45,14 +46,15 @@ class SleepLogUseCaseImplementation(
         sleepLogRequest: SleepLogRequest,
         idSleep: String
     ): ApiResponse<SleepLogResponse?, Meta> {
-        validateDates(sleepLogRequest)
+        validateAnyDate(sleepLogRequest)
+        validateRequest(sleepLogRequest)
         val sleepLog = this.getSleepLog(idSleep)
         if (sleepLog != null) {
-            val sleepLogUpdated: SleepLog = sleepLogMapper.toSleepLogFromRequest(sleepLogRequest)
+            val sleepLogUpdated: SleepLog = sleepLogMapper.toUpdateSleepLogFromRequest(sleepLogRequest, sleepLog)
             sleepLogUpdated.totalTimeInBedMinutes =
                 getDifferenceOfTime(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
-            sleepLogRepository.save(sleepLogUpdated)
-            val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLog)
+            val sleepLogNew = sleepLogRepository.save(sleepLogUpdated)
+            val data: SleepLogResponse = sleepLogMapper.toResponseFromSleepLog(sleepLogNew)
             return ApiResponse.Builder<SleepLogResponse, Meta>().status("success").data(data)
                 .message("Sleep updated with success!")
                 .meta(Meta(1, 1, Instant.now().toString())).build()
@@ -110,7 +112,8 @@ class SleepLogUseCaseImplementation(
             )
             data.averageTotalTimeInBedFormatted = formatTimeInBed(
                 calculateTotalTimeInBedAsDouble(
-                    data.averageDateBedtimeStartAndEndFormatted)
+                    data.averageDateBedtimeStartAndEndFormatted
+                )
             )
 
             return ApiResponse.Builder<SleepLogAvgLastThirtyDaysResponse, Meta>()
@@ -120,6 +123,7 @@ class SleepLogUseCaseImplementation(
                 .build()
         } else throw NotFoundException()
     }
+
 
     private fun calculateTotalTimeInBedAsDouble(interval: String): Double {
         val times = interval.split(" - ")
@@ -176,34 +180,12 @@ class SleepLogUseCaseImplementation(
         return zonedDateTime.toInstant()
     }
 
-    private fun getAvgTimeHourMinuteSecondEndString(sleepLogList: List<SleepLog>): String {
-        var totalSeconds = 0L
-
-        for (sleepLog in sleepLogList) {
-            val localTime = sleepLog.dateBedtimeEnd.atZone(getZoneId()).toLocalTime()
-            totalSeconds += localTime.toSecondOfDay()
-        }
-
-        val avgSeconds = totalSeconds / sleepLogList.size
-        val avgTime = LocalTime.ofSecondOfDay(avgSeconds)
-
-        return avgTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-    }
-
     private fun getQuantityOfMood(mood: String, sleepLogList: List<SleepLog>): Int {
         var quantity = 0
         for (item in sleepLogList) {
             if (item.feelingMorning == mood) ++quantity
         }
         return quantity
-    }
-
-    private fun getAvgTimeInBed(sleepLogList: List<SleepLog>): Double {
-        var timeInBed = 0.0
-        for (item in sleepLogList) {
-            timeInBed = ++item.totalTimeInBedMinutes
-        }
-        return timeInBed / sleepLogList.size
     }
 
     override fun getSleepLogPaginated(
@@ -243,7 +225,6 @@ class SleepLogUseCaseImplementation(
     private fun validateRequest(sleepLogRequest: SleepLogRequest) {
         validateDates(sleepLogRequest)
         validateUser(sleepLogRequest.idUser)
-        validateSleepLogAlreadyExist(sleepLogRequest.idUser)
         validateFeelingEnum(sleepLogRequest.feelingMorning)
     }
 
@@ -259,60 +240,76 @@ class SleepLogUseCaseImplementation(
         }
     }
 
-    private fun validateSleepLogAlreadyExist(idUser: String) {
-        if (sleepLogRepository.findAll(SleepLogSpecification(idUser)).size != 0) {
-            throw BadRequestException()
-        }
-    }
-
     private fun validateUser(idUser: String) {
         if (userUseCase.getUserById(idUser) == null) {
             throw BadRequestException()
         }
     }
 
-    fun validateDates(sleepLogRequest: SleepLogRequest) {
+    private fun validateAnyDate(sleepLogRequest: SleepLogRequest) {
+        val dateSleepParsed: LocalDate = LocalDate.parse(sleepLogRequest.dateSleep)
+        val startInstant: Instant = Instant.parse(sleepLogRequest.dateBedtimeStart)
+        val endInstant: Instant = Instant.parse(sleepLogRequest.dateBedtimeEnd)
+        val startDateFromInstant: LocalDate = startInstant.atZone(getZoneId()).toLocalDate()
+        val endDateFromInstant: LocalDate = endInstant.atZone(getZoneId()).toLocalDate()
 
-        fun parseInstant(str: String): Instant? =
-            runCatching { Instant.parse(str) }.getOrNull()
 
-        val startInstant = parseInstant(sleepLogRequest.dateBedtimeStart)
-            ?: throw BadRequestException("Start date not in valid ISO8601 format.")
-        val endInstant = parseInstant(sleepLogRequest.dateBedtimeEnd)
-            ?: throw BadRequestException("End date not in valid ISO8601 format.")
-
-        if (!endInstant.isAfter(startInstant)) {
-            throw BadRequestException("End time must be after start time.")
+        if (endDateFromInstant != dateSleepParsed) {
+            throw BadRequestException()
         }
 
-        val systemZone = ZoneId.systemDefault()
-        val nowDate = LocalDate.now(systemZone)
-        val yesterdayDate = nowDate.minusDays(1)
+        val oneDayBeforeDateSleep = dateSleepParsed.minusDays(1)
 
-        val startDate = startInstant.atZone(systemZone).toLocalDate()
-        val endDate = endInstant.atZone(systemZone).toLocalDate()
+        if (startDateFromInstant != dateSleepParsed && startDateFromInstant != oneDayBeforeDateSleep) {
+            throw BadRequestException()
+        }
 
-        if (startDate == nowDate || startDate == yesterdayDate) {
-            if (endDate != nowDate && endDate != startDate) {
-                throw BadRequestException(
-                    "For recent sleep entries (today/yesterday), the end date must be today or the same day as the start date."
-                )
-            }
-        } else {
-            if (startDate.isAfter(nowDate)) {
-                throw BadRequestException("Historical sleep log start date cannot be in the future.")
-            }
+        if (startInstant.isAfter(endInstant)) {
+            throw BadRequestException()
+        }
+    }
 
-            if (endDate.isAfter(nowDate)) {
-                throw BadRequestException("Historical sleep log end date cannot be in the future.")
-            }
 
-            if (endDate.isAfter(startDate.plusDays(1))) {
-                throw BadRequestException(
-                    "Historical sleep session cannot span more than two days (e.g., bedtime Jan 1st, wake-up Jan 2nd is max)."
-                )
-            }
+    private fun validateTodayDate(sleepLogRequest: SleepLogRequest) {
+        if (!isToday(sleepLogRequest.dateSleep)) {
+            throw BadRequestException()
+        }
+
+        val dateSleepParsed: LocalDate = LocalDate.parse(sleepLogRequest.dateSleep)
+        val startDateParsed: LocalDate = LocalDate.parse(sleepLogRequest.dateBedtimeStart.substringBefore('T'))
+        val endDateParsed: LocalDate = LocalDate.parse(sleepLogRequest.dateBedtimeEnd.substringBefore('T'))
+
+        if (endDateParsed != dateSleepParsed) {
+            throw BadRequestException()
+        }
+
+        val oneDayBeforeDateSleep = dateSleepParsed.minusDays(1)
+
+        if (startDateParsed != dateSleepParsed && startDateParsed != oneDayBeforeDateSleep) {
+            throw BadRequestException()
+        }
+    }
+
+    private fun isToday(targetInstant: String): Boolean {
+        val todayLocalDate = ZonedDateTime.ofInstant(getDateNowByServerMachine(), getZoneId()).toLocalDate().toString()
+        return todayLocalDate == targetInstant
+    }
+
+
+    fun validateDates(sleepLogRequest: SleepLogRequest) {
+        if (!sleepLogRequest.dateSleep.matches(Regex(DATE_BASIC_YYYY_MM_DD))) {
+            throw BadRequestException()
+        }
+
+        if (!sleepLogRequest.dateBedtimeStart.matches(Regex(DATE_ISO_8601_PATTERN))) {
+            throw BadRequestException()
+        }
+
+        if (!sleepLogRequest.dateBedtimeEnd.matches(Regex(DATE_ISO_8601_PATTERN))) {
+            throw BadRequestException()
         }
     }
 }
+
+
 
