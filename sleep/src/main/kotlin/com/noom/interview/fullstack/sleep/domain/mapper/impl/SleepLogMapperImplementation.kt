@@ -1,5 +1,6 @@
 package com.noom.interview.fullstack.sleep.domain.mapper.impl
 
+import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
 import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
@@ -39,6 +40,6 @@ class SleepLogMapperImplementation() : SleepLogMapper {
         totalTimeInBedMinutes = sleepLog.totalTimeInBedMinutes,
         totalTimeInBedFormatted = formatTimeInBed(sleepLog.totalTimeInBedMinutes),
         dateBedtimeStartAndEndFormatted = formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd),
-        feelingMorning = sleepLog.feelingMorning,
+        feelingMorning = MorningFeelingEnum.fromString(sleepLog.feelingMorning)?.displayName ?: ""
     )
 }

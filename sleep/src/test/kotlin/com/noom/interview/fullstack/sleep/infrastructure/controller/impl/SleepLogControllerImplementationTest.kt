@@ -6,6 +6,7 @@ import com.noom.interview.fullstack.sleep.domain.constants.URI_DELETE_SLEEP_LOG_
 import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_ALL_DAYS_SLEEP_BY_ID_USER_V1
 import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_LAST_NIGHT_SLEEP_BY_ID_USER_V1
 import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_SLEEP_LOG_V1
+import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
 import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
@@ -126,7 +127,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
                 formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd)
             ))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLog.feelingMorning))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(MorningFeelingEnum.fromString(sleepLog.feelingMorning)?.displayName))
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -185,7 +186,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLogRequest.feelingMorning))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(MorningFeelingEnum.fromString(sleepLogRequest.feelingMorning)?.displayName))
             .andDo(MockMvcResultHandlers.print())
     }
 
