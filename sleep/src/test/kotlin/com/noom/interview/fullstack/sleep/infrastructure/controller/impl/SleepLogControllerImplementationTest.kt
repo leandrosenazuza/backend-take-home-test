@@ -12,10 +12,7 @@ import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
 import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.model.createUserEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
-import com.noom.interview.fullstack.sleep.infrastructure.util.formatTodayDate
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
-import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
-import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
+import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -78,9 +75,10 @@ class SleepLogControllerImplementationTest : AbstractTest() {
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value("2025-05-25"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value(formatTodayDate(sleepLog.dateSleep)))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value("2025-05-25T01:00:00Z"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value("2025-05-25T10:00:00Z"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormated").value(formatTimeInBed(sleepLog.totalTimeInBedMinutes)))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value("540.0"))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idSleep").value(savedSleepLog.idSleep))
             .andDo(MockMvcResultHandlers.print())
@@ -119,6 +117,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedMinutes").value(averageMinutesInBed))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateSleep").value(formatTodayDate(sleepLog.dateSleep)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.totalTimeInBedFormated").value(formatTimeInBed(sleepLog.totalTimeInBedMinutes)))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeStart").value(bedtimeStart.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.dateBedtimeEnd").value(bedtimeEnd.toString()))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.feelingMorning").value(sleepLog.feelingMorning))

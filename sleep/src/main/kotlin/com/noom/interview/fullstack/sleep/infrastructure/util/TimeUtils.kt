@@ -23,6 +23,13 @@ fun parseStringToInstant(date: String): Instant {
     } else throw BadRequestException()
 }
 
+fun formatTimeInBed(totalMinutes: Double): String {
+    val hours = totalMinutes.toInt() / 60
+    val minutes = (totalMinutes % 60).toInt()
+
+    return "${hours} h ${minutes} min"
+}
+
 fun formatTodayDate(date: Instant): String {
     val calendar = Calendar.getInstance().apply {
         time = Date.from(date)
