@@ -32,6 +32,45 @@ class TimeUtilsKtTest : AbstractTest(){
         TimeZone.setDefault(originalTimeZone)
     }
 
+    @Test
+    fun `Should calculate correct duration for same-day times`() {
+        val start = Instant.parse("2023-10-01T22:00:00Z")
+        val end = Instant.parse("2023-10-01T23:00:00Z")
+
+        val duration = calculateDuration(start, end)
+
+        assertEquals(Duration.ofHours(1), duration)
+    }
+
+    @Test
+    fun `Should calculate correct duration for overnight times`() {
+        val start = Instant.parse("2023-10-01T22:00:00Z")
+        val end = Instant.parse("2023-10-02T07:00:00Z")
+
+        val duration = calculateDuration(start, end)
+
+        assertEquals(Duration.ofHours(9), duration)
+    }
+
+    @Test
+    fun `Should calculate correct duration when end time matches start time`() {
+        val start = Instant.parse("2023-10-01T22:00:00Z")
+        val end = Instant.parse("2023-10-01T22:00:00Z")
+
+        val duration = calculateDuration(start, end)
+
+        assertEquals(Duration.ZERO, duration)
+    }
+
+    @Test
+    fun `Should calculate correct duration when times are reversed across midnight`() {
+        val start = Instant.parse("2023-10-01T15:00:00Z")
+        val end = Instant.parse("2023-10-02T03:00:00Z")
+
+        val duration = calculateDuration(start, end)
+
+        assertEquals(Duration.ofHours(12), duration)
+    }
 
     @Test
     fun `getDifferenceOfTime returns positive minutes between instants`() {
@@ -153,7 +192,6 @@ class TimeUtilsKtTest : AbstractTest(){
         val thirtyAgo = getDateThirtyDaysLastByServerMachine()
 
         val minutesDiff = ChronoUnit.MINUTES.between(thirtyAgo, now)
-        // 30 days * 24h * 60m = 43200   → allow ±1 minute tolerance
         assertTrue(minutesDiff in 43199..43201)
     }
 

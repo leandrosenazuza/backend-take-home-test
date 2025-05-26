@@ -71,6 +71,13 @@ fun formatStartAndEndInterval(start: Instant, end: Instant): String {
     return "$formattedStart - $formattedEnd"
 }
 
+fun calculateDuration(start: Instant, end: Instant): Duration {
+    if(end.isBefore(start)){
+        return Duration.between(start, end.plus(24, ChronoUnit.HOURS))
+    }
+    return Duration.between(start, end)
+}
+
 fun formatDurationList(duration: Duration): String {
     val absDuration = duration.abs()
     val hours = absDuration.toHours()

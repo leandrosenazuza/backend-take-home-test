@@ -101,23 +101,23 @@ class SleepLogUseCaseImplementation(
             val data = SleepLogAvgLastThirtyDaysResponse(
                 intervalOfTimeFormatted = getIntervalOfTimeFormatted(),
                 idUser = idUser,
-                fromDate = getDateThirtyDaysLastByServerMachine().toString(),
-                toDate = getDateNowByServerMachine().toString(),
                 qtdDaysGood = getQuantityOfMood(MorningFeelingEnum.GOOD.toString(), sleepLogList),
                 qtdDaysBad = getQuantityOfMood(MorningFeelingEnum.BAD.toString(), sleepLogList),
                 qtdDaysOk = getQuantityOfMood(MorningFeelingEnum.OK.toString(), sleepLogList),
             )
 
+            val avgStart = getAvgTimeHourMinuteSecondStart(sleepLogList)
+            val avgEnd = getAvgTimeHourMinuteSecondEnd(sleepLogList)
+
             data.averageDateBedtimeStartAndEndFormatted = formatStartAndEndInterval(
-                getAvgTimeHourMinuteSecondStart(sleepLogList),
-                getAvgTimeHourMinuteSecondEnd(sleepLogList)
+                avgStart,avgEnd
             )
 
+            var duration = calculateDuration(
+                avgStart,avgEnd
+            )
             data.averageTotalTimeInBedFormatted = formatDurationList(
-                Duration.between(
-                    getAvgTimeHourMinuteSecondStart(sleepLogList),
-                    getAvgTimeHourMinuteSecondEnd(sleepLogList)
-                )
+                duration
             )
 
             return ApiResponse.Builder<SleepLogAvgLastThirtyDaysResponse, Meta>()
@@ -127,7 +127,6 @@ class SleepLogUseCaseImplementation(
                 .build()
         } else throw NotFoundException()
     }
-
 
     fun getIntervalOfTimeFormatted(): String {
         val today = LocalDate.now()
@@ -141,7 +140,11 @@ class SleepLogUseCaseImplementation(
         return "$startMonth $startDay to $endMonth $endDay"
     }
 
-    private fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
+    fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
+        if (sleepLogList.isEmpty()) {
+            throw IllegalArgumentException("Sleep log list cannot be empty")
+        }
+
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
@@ -158,7 +161,11 @@ class SleepLogUseCaseImplementation(
         return zonedDateTime.toInstant()
     }
 
-    private fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): Instant {
+    fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): Instant {
+        if (sleepLogList.isEmpty()) {
+            throw IllegalArgumentException("Sleep log list cannot be empty")
+        }
+
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
