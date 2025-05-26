@@ -1,9 +1,6 @@
 package com.noom.interview.fullstack.sleep.infrastructure.response
 
 import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size

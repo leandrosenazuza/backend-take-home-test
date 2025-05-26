@@ -1,6 +1,5 @@
 package com.noom.interview.fullstack.sleep.infrastructure.handler
 
-import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
 import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponseError
 import com.noom.interview.fullstack.sleep.infrastructure.response.DataError
 import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
@@ -10,6 +9,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+
 @ControllerAdvice
 class ExceptionHandler {
 
