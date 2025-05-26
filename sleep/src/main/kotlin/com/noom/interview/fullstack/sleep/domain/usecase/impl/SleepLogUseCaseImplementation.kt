@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 import kotlin.streams.toList
@@ -129,33 +128,6 @@ class SleepLogUseCaseImplementation(
         } else throw NotFoundException()
     }
 
-    fun formatDurationList(duration: Duration): String {
-        val absDuration = duration.abs()
-        val hours = absDuration.toHours()
-        val minutes = absDuration.toMinutes() % 60
-        return "%d h %02d min".format(hours, minutes)
-    }
-
-    fun formatStartAndEndInterval(start: Instant, end: Instant): String {
-        val formatter = DateTimeFormatter
-            .ofPattern("h:mm a", Locale.ENGLISH)
-            .withZone(getZoneId())
-
-        val formattedStart = formatter.format(start).replace("AM", "am").replace("PM", "pm")
-        val formattedEnd = formatter.format(end).replace("AM", "am").replace("PM", "pm")
-
-        return "$formattedStart - $formattedEnd"
-    }
-
-    fun getDayWithSuffix(day: Int): String {
-        return when {
-            day in 11..13 -> "${day}th"
-            day % 10 == 1 -> "${day}st"
-            day % 10 == 2 -> "${day}nd"
-            day % 10 == 3 -> "${day}rd"
-            else -> "${day}th"
-        }
-    }
 
     fun getIntervalOfTimeFormatted(): String {
         val today = LocalDate.now()
@@ -192,7 +164,6 @@ class SleepLogUseCaseImplementation(
         for (sleepLog in sleepLogList) {
             var localTime = sleepLog.dateBedtimeEnd.atZone(getZoneId()).toLocalTime()
 
-            // Adjust for crossing midnight
             if (localTime.isBefore(sleepLog.dateBedtimeStart.atZone(getZoneId()).toLocalTime())) {
                 localTime = localTime.plusHours(24)
             }

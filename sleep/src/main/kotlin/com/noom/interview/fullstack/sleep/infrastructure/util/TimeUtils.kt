@@ -3,6 +3,7 @@ package com.noom.interview.fullstack.sleep.infrastructure.util
 import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import java.text.SimpleDateFormat
 import java.time.*
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 
@@ -21,15 +22,6 @@ fun parseStringToInstant(date: String): Instant {
     else if (date.matches(Regex(DATE_ISO_8601_PATTERN))) {
         return Instant.parse(date)
     } else throw BadRequestException()
-}
-
-fun formatStartAndEndInterval(start: Instant, end: Instant): String {
-    val timeFormat = SimpleDateFormat("h:mm a", Locale.ENGLISH)
-
-    val startTime = timeFormat.format(Date.from(start)).lowercase()
-    val endTime = timeFormat.format(Date.from(end)).lowercase()
-
-    return "$startTime - $endTime"
 }
 
 fun formatTimeInBed(totalMinutes: Double): String {
@@ -56,6 +48,34 @@ fun formatTodayDate(date: Instant): String {
 
     val month = monthFormat.format(calendar.time)
     return "$month, $dayWithSuffix"
+}
+
+fun getDayWithSuffix(day: Int): String {
+    return when {
+        day in 11..13 -> "${day}th"
+        day % 10 == 1 -> "${day}st"
+        day % 10 == 2 -> "${day}nd"
+        day % 10 == 3 -> "${day}rd"
+        else -> "${day}th"
+    }
+}
+
+fun formatStartAndEndInterval(start: Instant, end: Instant): String {
+    val formatter = DateTimeFormatter
+        .ofPattern("h:mm a", Locale.ENGLISH)
+        .withZone(getZoneId())
+
+    val formattedStart = formatter.format(start).replace("AM", "am").replace("PM", "pm")
+    val formattedEnd = formatter.format(end).replace("AM", "am").replace("PM", "pm")
+
+    return "$formattedStart - $formattedEnd"
+}
+
+fun formatDurationList(duration: Duration): String {
+    val absDuration = duration.abs()
+    val hours = absDuration.toHours()
+    val minutes = absDuration.toMinutes() % 60
+    return "%d h %02d min".format(hours, minutes)
 }
 
 fun getZoneId() = ZoneId.systemDefault()
