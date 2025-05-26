@@ -1,12 +1,11 @@
 package com.noom.interview.fullstack.sleep.domain.mapper.impl
 
+import com.noom.interview.fullstack.sleep.domain.json.MorningFeelingEnum
 import com.noom.interview.fullstack.sleep.domain.json.request.SleepLogRequest
 import com.noom.interview.fullstack.sleep.domain.json.response.SleepLogResponse
 import com.noom.interview.fullstack.sleep.domain.mapper.SleepLogMapper
 import com.noom.interview.fullstack.sleep.domain.model.SleepLog
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
-import com.noom.interview.fullstack.sleep.infrastructure.util.getTruncDate
-import com.noom.interview.fullstack.sleep.infrastructure.util.parseStringToInstant
+import com.noom.interview.fullstack.sleep.infrastructure.util.*
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -35,10 +34,12 @@ class SleepLogMapperImplementation() : SleepLogMapper {
     override fun toResponseFromSleepLog(sleepLog: SleepLog) = SleepLogResponse(
         idUser = sleepLog.idUser,
         idSleep = sleepLog.idSleep,
-        dateSleep = getTruncDate(sleepLog.dateSleep),
+        dateSleep = formatTodayDate(sleepLog.dateSleep),
         dateBedtimeStart = sleepLog.dateBedtimeStart.toString(),
         dateBedtimeEnd = sleepLog.dateBedtimeEnd.toString(),
         totalTimeInBedMinutes = sleepLog.totalTimeInBedMinutes,
-        feelingMorning = sleepLog.feelingMorning,
+        totalTimeInBedFormatted = formatTimeInBed(sleepLog.totalTimeInBedMinutes),
+        dateBedtimeStartAndEndFormatted = formatStartAndEndInterval(sleepLog.dateBedtimeStart, sleepLog.dateBedtimeEnd),
+        feelingMorning = MorningFeelingEnum.fromString(sleepLog.feelingMorning)?.displayName ?: ""
     )
 }

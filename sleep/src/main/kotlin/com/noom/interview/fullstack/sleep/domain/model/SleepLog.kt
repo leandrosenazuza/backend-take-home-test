@@ -2,10 +2,11 @@ package com.noom.interview.fullstack.sleep.domain.model
 
 import com.noom.interview.fullstack.sleep.infrastructure.util.getDateNowByServerMachine
 import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.*
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Id
+import javax.persistence.Table
 
 @Entity
 @Table(name = "tab_sleep_log")

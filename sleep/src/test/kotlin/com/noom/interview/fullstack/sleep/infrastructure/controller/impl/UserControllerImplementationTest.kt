@@ -1,23 +1,17 @@
 package com.noom.interview.fullstack.sleep.infrastructure.controller.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.noom.interview.fullstack.sleep.AbstractTest
-import com.noom.interview.fullstack.sleep.domain.constants.*
-import com.noom.interview.fullstack.sleep.domain.json.response.UserResponse
-import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
+import com.noom.interview.fullstack.sleep.domain.constants.URI_DELETE_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_GET_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_POST_USER_V1
+import com.noom.interview.fullstack.sleep.domain.constants.URI_PUT_USER_V1
 import com.noom.interview.fullstack.sleep.domain.repository.UserRepository
-import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.model.createUserEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createUserRequestMock
-import com.noom.interview.fullstack.sleep.infrastructure.response.ApiResponse
-import com.noom.interview.fullstack.sleep.infrastructure.response.Meta
-import com.noom.interview.fullstack.sleep.infrastructure.util.getDifferenceOfTime
-import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
-import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +21,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.web.context.WebApplicationContext
-import java.time.LocalDate
 import java.util.*
 
 @Tag("UserIntegrationTest")
