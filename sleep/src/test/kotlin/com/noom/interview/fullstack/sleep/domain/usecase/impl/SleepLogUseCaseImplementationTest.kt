@@ -1,18 +1,22 @@
 package com.noom.interview.fullstack.sleep.domain.usecase.impl
 
 import com.noom.interview.fullstack.sleep.AbstractTest
+import com.noom.interview.fullstack.sleep.domain.model.SleepLog
 import com.noom.interview.fullstack.sleep.domain.repository.SleepLogRepository
+import com.noom.interview.fullstack.sleep.helper.model.createSleepLogEntityMock
 import com.noom.interview.fullstack.sleep.helper.request.createSleepLogRequestMock
 import com.noom.interview.fullstack.sleep.infrastructure.exception.BadRequestException
 import com.noom.interview.fullstack.sleep.infrastructure.util.getZoneId
 import com.noom.interview.fullstack.sleep.infrastructure.util.localDateTimeToInstant
-import org.junit.jupiter.api.Assertions.assertDoesNotThrow
-import org.junit.jupiter.api.Assertions.assertThrows
+import com.noom.interview.fullstack.sleep.infrastructure.util.parseStringToInstant
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 @Tag("UnitTest")
 class SleepLogUseCaseImplementationTest : AbstractTest() {
@@ -26,6 +30,49 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
     @BeforeEach
     fun setUp() {
         sleepLogRepository.deleteAll()
+    }
+
+    @Test
+    fun `Should calculate correct average start time`() {
+        val sleepLogs = listOf(
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-01T22:00:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-02T06:00:00Z"),
+            ),
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-02T22:15:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-03T06:15:00Z")
+            ),
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-03T22:30:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-04T06:30:00Z")
+            ))
+
+        val avgStart = sleepLogUseCaseImpl.getAvgTimeHourMinuteSecondStart(sleepLogs).toString()
+
+        assertEquals("22:15:00Z",  avgStart.split("T")[1])
+    }
+
+    @Test
+    fun `Should calculate correct average end time not considerin the date, moth, year, only the hour that started to sleep and wake up`() {
+        val sleepLogs = listOf(
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-01T22:00:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-02T06:00:00Z"),
+            ),
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-02T22:15:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-03T06:15:00Z")
+            ),
+            createSleepLogEntityMock(
+                dateBedtimeStart = parseStringToInstant("2023-10-03T22:30:00Z"),
+                dateBedtimeEnd = parseStringToInstant("2023-10-04T06:30:00Z")
+            ))
+
+        val avgEnd = sleepLogUseCaseImpl.getAvgTimeHourMinuteSecondEnd(sleepLogs).toString()
+
+
+        assertEquals("06:15:00Z",  avgEnd.split("T")[1])
     }
 
     @Test

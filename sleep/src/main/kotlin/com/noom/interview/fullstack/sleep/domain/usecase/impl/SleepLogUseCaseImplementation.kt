@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 import kotlin.streams.toList
@@ -102,23 +101,23 @@ class SleepLogUseCaseImplementation(
             val data = SleepLogAvgLastThirtyDaysResponse(
                 intervalOfTimeFormatted = getIntervalOfTimeFormatted(),
                 idUser = idUser,
-                fromDate = getDateThirtyDaysLastByServerMachine().toString(),
-                toDate = getDateNowByServerMachine().toString(),
                 qtdDaysGood = getQuantityOfMood(MorningFeelingEnum.GOOD.toString(), sleepLogList),
                 qtdDaysBad = getQuantityOfMood(MorningFeelingEnum.BAD.toString(), sleepLogList),
                 qtdDaysOk = getQuantityOfMood(MorningFeelingEnum.OK.toString(), sleepLogList),
             )
 
+            val avgStart = getAvgTimeHourMinuteSecondStart(sleepLogList)
+            val avgEnd = getAvgTimeHourMinuteSecondEnd(sleepLogList)
+
             data.averageDateBedtimeStartAndEndFormatted = formatStartAndEndInterval(
-                getAvgTimeHourMinuteSecondStart(sleepLogList),
-                getAvgTimeHourMinuteSecondEnd(sleepLogList)
+                avgStart,avgEnd
             )
 
+            var duration = calculateDuration(
+                avgStart,avgEnd
+            )
             data.averageTotalTimeInBedFormatted = formatDurationList(
-                Duration.between(
-                    getAvgTimeHourMinuteSecondStart(sleepLogList),
-                    getAvgTimeHourMinuteSecondEnd(sleepLogList)
-                )
+                duration
             )
 
             return ApiResponse.Builder<SleepLogAvgLastThirtyDaysResponse, Meta>()
@@ -127,34 +126,6 @@ class SleepLogUseCaseImplementation(
                 .message("The sleep log average of the last 30 days return with success!")
                 .build()
         } else throw NotFoundException()
-    }
-
-    fun formatDurationList(duration: Duration): String {
-        val absDuration = duration.abs()
-        val hours = absDuration.toHours()
-        val minutes = absDuration.toMinutes() % 60
-        return "%d h %02d min".format(hours, minutes)
-    }
-
-    fun formatStartAndEndInterval(start: Instant, end: Instant): String {
-        val formatter = DateTimeFormatter
-            .ofPattern("h:mm a", Locale.ENGLISH)
-            .withZone(getZoneId())
-
-        val formattedStart = formatter.format(start).replace("AM", "am").replace("PM", "pm")
-        val formattedEnd = formatter.format(end).replace("AM", "am").replace("PM", "pm")
-
-        return "$formattedStart - $formattedEnd"
-    }
-
-    fun getDayWithSuffix(day: Int): String {
-        return when {
-            day in 11..13 -> "${day}th"
-            day % 10 == 1 -> "${day}st"
-            day % 10 == 2 -> "${day}nd"
-            day % 10 == 3 -> "${day}rd"
-            else -> "${day}th"
-        }
     }
 
     fun getIntervalOfTimeFormatted(): String {
@@ -169,7 +140,11 @@ class SleepLogUseCaseImplementation(
         return "$startMonth $startDay to $endMonth $endDay"
     }
 
-    private fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
+    fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
+        if (sleepLogList.isEmpty()) {
+            throw IllegalArgumentException("Sleep log list cannot be empty")
+        }
+
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
@@ -186,13 +161,16 @@ class SleepLogUseCaseImplementation(
         return zonedDateTime.toInstant()
     }
 
-    private fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): Instant {
+    fun getAvgTimeHourMinuteSecondEnd(sleepLogList: List<SleepLog>): Instant {
+        if (sleepLogList.isEmpty()) {
+            throw IllegalArgumentException("Sleep log list cannot be empty")
+        }
+
         var totalSeconds = 0L
 
         for (sleepLog in sleepLogList) {
             var localTime = sleepLog.dateBedtimeEnd.atZone(getZoneId()).toLocalTime()
 
-            // Adjust for crossing midnight
             if (localTime.isBefore(sleepLog.dateBedtimeStart.atZone(getZoneId()).toLocalTime())) {
                 localTime = localTime.plusHours(24)
             }
