@@ -1,0 +1,471 @@
+{
+	"info": {
+		"_postman_id": "bcffaf14-dbe5-4afb-b05e-7614dfdcc7aa",
+		"name": "NOOM CHALLENGE COLLECTION - LEANDRO ZUZA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18609863"
+	},
+	"item": [
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "v1",
+					"item": [
+						{
+							"name": "user",
+							"item": [
+								{
+									"name": "{idUser}",
+									"item": [
+										{
+											"name": "get User By Id",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/user/:idUser",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"user",
+														":idUser"
+													],
+													"variable": [
+														{
+															"key": "idUser",
+															"value": "0529d64a-8441-4212-98aa-8d546b366762",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "update User",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"userName\": \"Leandro Zuza\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/user/:idUser",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"user",
+														":idUser"
+													],
+													"variable": [
+														{
+															"key": "idUser",
+															"value": "a331fcb9-47de-4702-9c77-9f3733621833",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "delete User By Id",
+											"request": {
+												"method": "DELETE",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/user/:idUser",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"user",
+														":idUser"
+													],
+													"variable": [
+														{
+															"key": "idUser",
+															"value": "Lorem velit aliqua dolor",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "create User",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"userName\": \"Leandro Zuza\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/v1/user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"user"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "sleep",
+							"item": [
+								{
+									"name": "{idSleep}",
+									"item": [
+										{
+											"name": "get Sleep Log By Id Sleep",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/sleep/:idSleep",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"sleep",
+														":idSleep"
+													],
+													"variable": [
+														{
+															"key": "idSleep",
+															"value": "39d722e5-9301-4a7a-af98-695512b45403",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "update Sleep Log",
+											"request": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"idUser\": \"a331fcb9-47de-4702-9c77-9f3733621833\",\n  \"dateSleep\": \"2025-05-24\",\n  \"dateBedtimeStart\": \"2025-05-23T23:01:00Z\",\n  \"dateBedtimeEnd\": \"2025-05-24T07:01:00Z\",\n  \"feelingMorning\": \"OK\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/sleep/:idSleep",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"sleep",
+														":idSleep"
+													],
+													"variable": [
+														{
+															"key": "idSleep",
+															"value": "39d722e5-9301-4a7a-af98-695512b45403",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "delete Sleep Log",
+											"request": {
+												"method": "DELETE",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "*/*"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/v1/sleep/:idSleep",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"v1",
+														"sleep",
+														":idSleep"
+													],
+													"variable": [
+														{
+															"key": "idSleep",
+															"value": "Lorem velit aliqua dolor",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "{idUser}",
+									"item": [
+										{
+											"name": "last-thirty-days",
+											"item": [
+												{
+													"name": "get Thirty Days Last Average Sleep Log",
+													"request": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "*/*"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/api/v1/sleep/:idUser/last-thirty-days",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"v1",
+																"sleep",
+																":idUser",
+																"last-thirty-days"
+															],
+															"variable": [
+																{
+																	"key": "idUser",
+																	"value": "a331fcb9-47de-4702-9c77-9f3733621833",
+																	"description": "(Required) "
+																}
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "last-night",
+											"item": [
+												{
+													"name": "get Last Night Sleep Log Information",
+													"request": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "*/*"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/api/v1/sleep/:idUser/last-night",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"v1",
+																"sleep",
+																":idUser",
+																"last-night"
+															],
+															"variable": [
+																{
+																	"key": "idUser",
+																	"value": "a331fcb9-47de-4702-9c77-9f3733621833",
+																	"description": "(Required) "
+																}
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "all",
+											"item": [
+												{
+													"name": "get All Sleep Log Byid User",
+													"request": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "*/*"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/api/v1/sleep/:idUser/all?page=1&page-size=10",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"v1",
+																"sleep",
+																":idUser",
+																"all"
+															],
+															"query": [
+																{
+																	"key": "page",
+																	"value": "1"
+																},
+																{
+																	"key": "page-size",
+																	"value": "10"
+																}
+															],
+															"variable": [
+																{
+																	"key": "idUser",
+																	"value": "Lorem velit aliqua dolor",
+																	"description": "(Required) "
+																}
+															]
+														}
+													},
+													"response": []
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "create Sleep Log",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"idUser\": \"a331fcb9-47de-4702-9c77-9f3733621833\",\n  \"dateSleep\": \"2025-05-24\",\n  \"dateBedtimeStart\": \"2025-05-23T23:01:00Z\",\n  \"dateBedtimeEnd\": \"2025-05-24T07:01:00Z\",\n  \"feelingMorning\": \"OK\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/v1/sleep",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"sleep"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		}
+	]
+}
