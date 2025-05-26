@@ -4,6 +4,7 @@ data class SleepLogAvgLastThirtyDaysResponse(
     val idUser: String = "",
     val fromDate: String = "",
     val toDate: String = "",
+    val intervalOfTimeFormatted: String = "",
     var averageTotalTimeInBedFormatted: String = "",
     var averageDateBedtimeStartAndEndFormatted: String = "",
     val qtdDaysGood: Int = 0,

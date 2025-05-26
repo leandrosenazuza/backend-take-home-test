@@ -38,11 +38,11 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
             bedtimeEnd = localDateTimeToInstant(nowDate, 7, 30).toString()
         )
 
-        assertDoesNotThrow { sleepLogUseCaseImpl.validateDates(request) }
+        assertDoesNotThrow { sleepLogUseCaseImpl.validateDatesPattern(request) }
     }
 
     @Test
-    fun `Should return BadRequestException when invalid when bedtimeEnd before bedtimeStart`() {
+    fun `Should return BadRequestException when bedtimeEnd before bedtimeStart`() {
         val nowDate = LocalDate.now(getZoneId())
 
         val request = createSleepLogRequestMock(
@@ -51,7 +51,7 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
         )
 
         assertThrows(BadRequestException::class.java) {
-            sleepLogUseCaseImpl.validateDates(request)
+            sleepLogUseCaseImpl.validateAnyDate(request)
         }
     }
 
@@ -66,7 +66,7 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
         )
 
         assertThrows(BadRequestException::class.java) {
-            sleepLogUseCaseImpl.validateDates(request)
+            sleepLogUseCaseImpl.validateAnyDate(request)
         }
     }
 
@@ -79,7 +79,7 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
             bedtimeEnd = localDateTimeToInstant(nowDate, 9, 0).toString(),
         )
 
-        assertDoesNotThrow { sleepLogUseCaseImpl.validateDates(request) }
+        assertDoesNotThrow { sleepLogUseCaseImpl.validateDatesPattern(request) }
     }
 
     @Test
@@ -92,7 +92,7 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
         )
 
         assertThrows(BadRequestException::class.java) {
-            sleepLogUseCaseImpl.validateDates(request)
+            sleepLogUseCaseImpl.validateDatesPattern(request)
         }
     }
 
@@ -106,7 +106,7 @@ class SleepLogUseCaseImplementationTest : AbstractTest() {
         )
 
         assertThrows(BadRequestException::class.java) {
-            sleepLogUseCaseImpl.validateDates(request)
+            sleepLogUseCaseImpl.validateAnyDate(request)
         }
     }
 }

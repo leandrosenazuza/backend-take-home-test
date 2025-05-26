@@ -21,6 +21,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.*
 import kotlin.streams.toList
 
 @Service
@@ -98,6 +100,7 @@ class SleepLogUseCaseImplementation(
         val sleepLogList = getLastThirtyDaysSleepLogByIdUser(idUser)
         if (sleepLogList.isNotEmpty()) {
             val data = SleepLogAvgLastThirtyDaysResponse(
+                intervalOfTimeFormatted = getIntervalOfTimeFormatted(),
                 idUser = idUser,
                 fromDate = getDateThirtyDaysLastByServerMachine().toString(),
                 toDate = getDateNowByServerMachine().toString(),
@@ -110,9 +113,11 @@ class SleepLogUseCaseImplementation(
                 getAvgTimeHourMinuteSecondStart(sleepLogList),
                 getAvgTimeHourMinuteSecondEnd(sleepLogList)
             )
-            data.averageTotalTimeInBedFormatted = formatTimeInBed(
-                calculateTotalTimeInBedAsDouble(
-                    data.averageDateBedtimeStartAndEndFormatted
+
+            data.averageTotalTimeInBedFormatted = formatDurationList(
+                Duration.between(
+                    getAvgTimeHourMinuteSecondStart(sleepLogList),
+                    getAvgTimeHourMinuteSecondEnd(sleepLogList)
                 )
             )
 
@@ -124,20 +129,44 @@ class SleepLogUseCaseImplementation(
         } else throw NotFoundException()
     }
 
+    fun formatDurationList(duration: Duration): String {
+        val absDuration = duration.abs()
+        val hours = absDuration.toHours()
+        val minutes = absDuration.toMinutes() % 60
+        return "%d h %02d min".format(hours, minutes)
+    }
 
-    private fun calculateTotalTimeInBedAsDouble(interval: String): Double {
-        val times = interval.split(" - ")
-        val formatter = DateTimeFormatter.ofPattern("h:mm a")
+    fun formatStartAndEndInterval(start: Instant, end: Instant): String {
+        val formatter = DateTimeFormatter
+            .ofPattern("h:mm a", Locale.ENGLISH)
+            .withZone(getZoneId())
 
-        val start = LocalTime.parse(times[0].uppercase(), formatter)
-        val end = LocalTime.parse(times[1].uppercase(), formatter)
+        val formattedStart = formatter.format(start).replace("AM", "am").replace("PM", "pm")
+        val formattedEnd = formatter.format(end).replace("AM", "am").replace("PM", "pm")
 
-        var durationMinutes = Duration.between(start, end).toMinutes()
-        if (durationMinutes < 0) {
-            durationMinutes += 24 * 60
+        return "$formattedStart - $formattedEnd"
+    }
+
+    fun getDayWithSuffix(day: Int): String {
+        return when {
+            day in 11..13 -> "${day}th"
+            day % 10 == 1 -> "${day}st"
+            day % 10 == 2 -> "${day}nd"
+            day % 10 == 3 -> "${day}rd"
+            else -> "${day}th"
         }
+    }
 
-        return durationMinutes.toDouble()
+    fun getIntervalOfTimeFormatted(): String {
+        val today = LocalDate.now()
+        val thirtyDaysAgo = today.minusDays(29)
+
+        val startMonth = thirtyDaysAgo.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+        val endMonth = today.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+        val startDay = getDayWithSuffix(thirtyDaysAgo.dayOfMonth)
+        val endDay = getDayWithSuffix(today.dayOfMonth)
+
+        return "$startMonth $startDay to $endMonth $endDay"
     }
 
     private fun getAvgTimeHourMinuteSecondStart(sleepLogList: List<SleepLog>): Instant {
@@ -223,7 +252,7 @@ class SleepLogUseCaseImplementation(
     }
 
     private fun validateRequest(sleepLogRequest: SleepLogRequest) {
-        validateDates(sleepLogRequest)
+        validateDatesPattern(sleepLogRequest)
         validateUser(sleepLogRequest.idUser)
         validateFeelingEnum(sleepLogRequest.feelingMorning)
     }
@@ -246,7 +275,7 @@ class SleepLogUseCaseImplementation(
         }
     }
 
-    private fun validateAnyDate(sleepLogRequest: SleepLogRequest) {
+    fun validateAnyDate(sleepLogRequest: SleepLogRequest) {
         val dateSleepParsed: LocalDate = LocalDate.parse(sleepLogRequest.dateSleep)
         val startInstant: Instant = Instant.parse(sleepLogRequest.dateBedtimeStart)
         val endInstant: Instant = Instant.parse(sleepLogRequest.dateBedtimeEnd)
@@ -296,7 +325,7 @@ class SleepLogUseCaseImplementation(
     }
 
 
-    fun validateDates(sleepLogRequest: SleepLogRequest) {
+    fun validateDatesPattern(sleepLogRequest: SleepLogRequest) {
         if (!sleepLogRequest.dateSleep.matches(Regex(DATE_BASIC_YYYY_MM_DD))) {
             throw BadRequestException()
         }

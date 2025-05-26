@@ -320,7 +320,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
     }
 
     @Test
-    fun `Should respond with the correct average time interval for the last 30 days of sleep log`() {
+    fun `Should respond with the correct average time interval for the last 30 days of sleep log with same time interval`() {
         val idUser = UUID.randomUUID().toString()
 
         userRepository.save(createUserEntityMock(idUser = idUser))
@@ -351,7 +351,7 @@ class SleepLogControllerImplementationTest : AbstractTest() {
                     .value("The sleep log average of the last 30 days return with success!")
             )
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("9 h 0 min"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("15 h 00 min"))
             .andExpect(
                 MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted")
                     .value("10:00 pm - 7:00 am")
@@ -360,5 +360,157 @@ class SleepLogControllerImplementationTest : AbstractTest() {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(0))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(0))
             .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should respond with the correct average time interval for the last 30 days of sleep log with little difference in the interval of time`() {
+        val idUser = UUID.randomUUID().toString()
+
+        userRepository.save(createUserEntityMock(idUser = idUser))
+
+        for (i in 0..29) {
+            val currentDate = LocalDate.now(getZoneId()).minusDays(i.toLong())
+            val previousDate = currentDate.minusDays(1)
+            val startDate = previousDate.atTime(22, i).atZone(getZoneId()).toInstant()
+            val endDate = currentDate.atTime(7, i).atZone(getZoneId()).toInstant()
+            val totalTime = getDifferenceOfTime(startDate, endDate)
+            val sleepLog = SleepLog(
+                idUser = idUser,
+                dateSleep = currentDate.atStartOfDay(getZoneId()).toInstant(),
+                dateBedtimeStart = startDate,
+                dateBedtimeEnd = endDate,
+                totalTimeInBedMinutes = totalTime,
+                feelingMorning = randonMorningEnum(i)
+            )
+            sleepLogRepository.save(sleepLog)
+        }
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.message")
+                    .value("The sleep log average of the last 30 days return with success!")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("15 h 00 min"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted")
+                    .value("10:14 pm - 7:14 am")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysGood").value(5))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(12))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(13))
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should respond with the correct average time interval for the last 30 days of sleep log with natural interval of time`() {
+        val idUser = UUID.randomUUID().toString()
+
+        userRepository.save(createUserEntityMock(idUser = idUser))
+
+        for (i in 0..29) {
+            val currentDate = LocalDate.now(getZoneId()).minusDays(i.toLong())
+            val previousDate = currentDate.minusDays(1)
+            val startDate = previousDate.atTime(18 + randonHourStart(i), i).atZone(getZoneId()).toInstant()
+            val endDate = currentDate.atTime(4 + randonHourEnd(i), i).atZone(getZoneId()).toInstant()
+            val totalTime = getDifferenceOfTime(startDate, endDate)
+            val sleepLog = SleepLog(
+                idUser = idUser,
+                dateSleep = currentDate.atStartOfDay(getZoneId()).toInstant(),
+                dateBedtimeStart = startDate,
+                dateBedtimeEnd = endDate,
+                totalTimeInBedMinutes = totalTime,
+                feelingMorning = randonMorningEnum(i)
+            )
+            sleepLogRepository.save(sleepLog)
+        }
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.message")
+                    .value("The sleep log average of the last 30 days return with success!")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("14 h 02 min"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted")
+                    .value("6:26 pm - 4:24 am")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysGood").value(5))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(12))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(13))
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
+    fun `Should respond with the correct average time interval for the last 30 days of sleep log with a lot of start dates on the same day of today`() {
+        val idUser = UUID.randomUUID().toString()
+
+        userRepository.save(createUserEntityMock(idUser = idUser))
+
+        for (i in 0..29) {
+            val currentDate = LocalDate.now(getZoneId()).minusDays(i.toLong())
+            val previousDate = currentDate.minusDays(1)
+            val startDate = if (i % 10 == 0) currentDate.atTime(0 + randonHourStart(i), i).atZone(getZoneId()).toInstant()
+            else previousDate.atTime(20 + randonHourStart(i), i).atZone(getZoneId()).toInstant()
+            val endDate = currentDate.atTime(4 + randonHourEnd(i), i).atZone(getZoneId()).toInstant()
+            val totalTime = getDifferenceOfTime(startDate, endDate)
+            val sleepLog = SleepLog(
+                idUser = idUser,
+                dateSleep = currentDate.atStartOfDay(getZoneId()).toInstant(),
+                dateBedtimeStart = startDate,
+                dateBedtimeEnd = endDate,
+                totalTimeInBedMinutes = totalTime,
+                feelingMorning = randonMorningEnum(i)
+            )
+            sleepLogRepository.save(sleepLog)
+        }
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.get(URI_GET_LAST_THIRTY_DAYS_SLEEP_BY_ID_USER_V1.replace("{idUser}", idUser))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("success"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.message")
+                    .value("The sleep log average of the last 30 days return with success!")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.idUser").value(idUser))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.averageTotalTimeInBedFormatted").value("14 h 02 min"))
+            .andExpect(
+                MockMvcResultMatchers.jsonPath("$.data.averageDateBedtimeStartAndEndFormatted")
+                    .value("6:26 pm - 4:24 am")
+            )
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysGood").value(5))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysBad").value(12))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.qtdDaysOk").value(13))
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    fun randonHourStart(i: Int): Int {
+        if(i % 5 == 0) return 1
+        else return 0
+    }
+    fun randonHourEnd(i: Int): Int {
+        if(i % 2 == 0 && i % 3 == 0) return 1
+        else return 0
+    }
+
+    fun randonMorningEnum(i: Int): String {
+        if(i == 0) return "OK"
+        else if(i % 5 == 0) return "GOOD"
+        else if(i % 2 == 0) return "BAD"
+        else return "OK"
     }
 }
